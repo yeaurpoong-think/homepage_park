@@ -15,8 +15,1755 @@
   <meta property="og:image" content="https://storage.googleapis.com/waipha-statics/landing-og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   
-  <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <!-- CSS Stylesheet (Inlined for standalone deployment) -->
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* --- DESIGN SYSTEM TOKENS --- */
+:root {
+  --font-display: 'Outfit', 'Pretendard', sans-serif;
+  --font-body: 'Inter', 'Pretendard', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Colors */
+  --bg-dark: #030603;
+  --bg-card: #090e09;
+  --bg-card-hover: #0e150e;
+  --accent-emerald: #10b981;
+  --accent-lime: #a3e635;
+  --accent-violet: #8b5cf6;
+  --accent-red: #ef4444;
+
+  --text-white: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-dimmed: rgba(255, 255, 255, 0.35);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-glow-green: rgba(16, 185, 129, 0.2);
+  --border-glow-lime: rgba(163, 230, 53, 0.2);
+
+  /* Gradients */
+  --gradient-text: linear-gradient(135deg, #ffffff 30%, #a3e635 100%);
+  --gradient-emerald-lime: linear-gradient(135deg, #10b981 0%, #a3e635 100%);
+  --gradient-glow: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(3, 6, 3, 0) 70%);
+  --gradient-nav: rgba(10, 14, 10, 0.75);
+}
+
+/* --- RESET & BASIC STYLES --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-dark);
+  color: var(--text-white);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  background-color: var(--bg-dark);
+  position: relative;
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- AMBIENT GLOW BACKDROPS (Mitosis Style) --- */
+.ambient-glow {
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: var(--gradient-glow);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.glow-top-left {
+  top: -200px;
+  left: -200px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(3, 6, 3, 0) 70%);
+}
+
+.glow-center-right {
+  top: 30%;
+  right: -200px;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.1) 0%, rgba(3, 6, 3, 0) 70%);
+}
+
+.glow-bottom-left {
+  bottom: 10%;
+  left: -300px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(3, 6, 3, 0) 70%);
+}
+
+/* --- SCROLL REVEAL ANIMATIONS --- */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  filter: blur(10px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* --- GLASSMORPHIC NAV BAR (Pill Shape) --- */
+header {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1100px;
+  height: 70px;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: var(--gradient-nav);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s ease;
+}
+
+header.scrolled {
+  top: 12px;
+  background: rgba(4, 7, 4, 0.9);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: 1.5px;
+  color: var(--text-white);
+}
+
+.logo span {
+  background: var(--gradient-emerald-lime);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.logo-heartbeat {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--accent-lime);
+  box-shadow: 0 0 10px var(--accent-lime);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.9); box-shadow: 0 0 5px rgba(163, 230, 53, 0.5); }
+  50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(163, 230, 53, 1); }
+  100% { transform: scale(0.9); box-shadow: 0 0 5px rgba(163, 230, 53, 0.5); }
+}
+
+nav {
+  display: flex;
+  gap: 32px;
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+nav a:hover {
+  color: var(--accent-lime);
+  transform: translateY(-2px);
+}
+
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: var(--gradient-emerald-lime);
+  color: #030603;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(163, 230, 53, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-cta:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(163, 230, 53, 0.5);
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-menu-btn svg {
+  stroke: var(--text-white);
+}
+
+/* --- HERO SECTION --- */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 120px 24px 60px 24px;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.hero > *:not(.hero-video-bg):not(.hero-overlay) {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(3, 6, 3, 0.55) 0%,
+    rgba(3, 6, 3, 0.4) 50%,
+    rgba(3, 6, 3, 0.75) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(163, 230, 53, 0.06);
+  border: 1px solid rgba(163, 230, 53, 0.2);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--accent-lime);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  max-width: 950px;
+  margin-bottom: 24px;
+  letter-spacing: -1.5px;
+}
+
+.hero h1 .gradient-text {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: block;
+}
+
+.hero p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 680px;
+  margin-bottom: 40px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 20px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: 999px;
+  background: var(--gradient-emerald-lime);
+  color: #030603;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.45);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-white);
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
+}
+
+/* --- THE PROBLEM & SOLUTION SECTION --- */
+.section {
+  padding: 120px 24px;
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.section-header h2 {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+.section-header p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: 300;
+}
+
+.split-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.problem-visual {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  height: 480px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+.radar-scope {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.05);
+}
+
+.radar-scope::before {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.radar-scope::after {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1px solid rgba(16, 185, 129, 0.08);
+}
+
+.radar-crosshair-h {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.radar-crosshair-v {
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.radar-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(16, 185, 129, 0.3) 0deg, transparent 90deg, transparent 360deg);
+  animation: spin 4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.radar-target {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-lime);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent-lime);
+  opacity: 0.8;
+}
+
+.radar-t1 { top: 30%; left: 40%; }
+.radar-t2 { top: 60%; left: 75%; }
+.radar-t3 { top: 75%; left: 20%; }
+
+.contrast-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.contrast-row {
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.01);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.contrast-row:hover, .contrast-row.active {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border-subtle);
+}
+
+.contrast-row.active {
+  border-color: rgba(163, 230, 53, 0.2);
+  box-shadow: 0 0 20px rgba(163, 230, 53, 0.04);
+}
+
+.contrast-row .num {
+  font-family: var(--font-mono);
+  color: var(--accent-lime);
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.contrast-row h3 {
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.contrast-row.active h3 {
+  color: var(--accent-lime);
+}
+
+.contrast-row p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  display: none;
+}
+
+.contrast-row.active p {
+  display: block;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- INTERACTIVE AI SWING ANALYZER --- */
+.analyzer-dashboard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 28px;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+.analyzer-dashboard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.video-container {
+  position: relative;
+  border-radius: 20px;
+  background: #000;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  overflow: hidden;
+  height: 460px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.05), inset 0 0 25px rgba(0, 0, 0, 0.95);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-container:hover {
+  border-color: rgba(163, 230, 53, 0.4);
+  box-shadow: 0 0 30px rgba(163, 230, 53, 0.12), inset 0 0 25px rgba(0, 0, 0, 0.95);
+}
+
+.canvas-player {
+  width: 100%;
+  height: calc(100% - 64px);
+  position: relative;
+}
+
+#swing-canvas {
+  width: 100%;
+  height: 100%;
+  background: #030603;
+  display: block;
+}
+
+.canvas-hud {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 10;
+}
+
+.hud-pill {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-lime);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-pill.danger {
+  color: var(--accent-red);
+}
+
+.hud-pill span.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+
+.hud-pill.live span.dot {
+  animation: blink 1s infinite alternate;
+}
+
+@keyframes blink {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+.analysis-status-overlay {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-white);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 280px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  display: none;
+}
+
+.analysis-status-overlay.active {
+  display: flex;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(163, 230, 53, 0.2);
+  border-top-color: var(--accent-lime);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.player-controls {
+  height: 64px;
+  background: rgba(10, 15, 10, 0.9);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.shot-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-tab {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tab:hover, .btn-tab.active {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-lime);
+  color: var(--text-white);
+}
+
+.btn-play-analysis {
+  background: var(--accent-lime);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  color: #030603;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-play-analysis:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.3);
+}
+
+.telemetry-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.telemetry-header {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.telemetry-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.telemetry-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.telemetry-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: left;
+}
+
+.telemetry-card label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.telemetry-card .value {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-white);
+}
+
+.telemetry-card .value span {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.telemetry-card.highlight .value {
+  color: var(--accent-lime);
+}
+
+.report-panel {
+  background: rgba(16, 185, 129, 0.03);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 130px;
+}
+
+.report-placeholder {
+  text-align: center;
+  color: var(--text-dimmed);
+  font-size: 0.9rem;
+}
+
+.report-content {
+  display: none;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.report-content.active {
+  display: block;
+}
+
+.report-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.report-title-row h4 {
+  color: var(--accent-lime);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.report-score-badge {
+  background: var(--accent-lime);
+  color: #030603;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.report-bullets {
+  list-style: none;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-bullets li {
+  position: relative;
+  padding-left: 18px;
+  line-height: 1.4;
+}
+
+.report-bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.report-bullets li.good::before { background-color: var(--accent-emerald); }
+.report-bullets li.bad::before { background-color: var(--accent-red); }
+
+/* --- AI HEALTHCARE & COURSE RECOMMENDER --- */
+.healthcare-dashboard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 28px;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.health-watch-widget {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.widget-header label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dimmed);
+  letter-spacing: 1px;
+}
+
+.watch-mesh {
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  width: 170px;
+  height: 170px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 80%);
+  position: relative;
+}
+
+.watch-val {
+  font-family: var(--font-mono);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.watch-lbl {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.heart-icon {
+  position: absolute;
+  top: 25px;
+  color: var(--accent-red);
+  font-size: 1.2rem;
+  animation: beat 0.8s infinite alternate;
+}
+
+@keyframes beat {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+.health-metrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metric-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-lbl-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.metric-lbl-row span.val {
+  font-family: var(--font-mono);
+  color: var(--text-white);
+  font-weight: 600;
+}
+
+.metric-bar-outer {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.metric-bar-inner {
+  height: 100%;
+  background: var(--gradient-emerald-lime);
+  border-radius: 3px;
+  width: 0;
+  transition: width 1s ease-in-out;
+}
+
+.metric-bar-inner.violet {
+  background: var(--accent-violet);
+}
+
+/* Course Recommender Panel */
+.course-finder-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.finder-sliders {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-group label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+.slider-group label span.val-bubble {
+  font-family: var(--font-mono);
+  color: var(--accent-lime);
+  font-weight: 500;
+}
+
+.slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-lime);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-lime);
+  transition: transform 0.1s ease;
+}
+
+.slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.course-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.course-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.course-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.course-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(163, 230, 53, 0.2);
+}
+
+.course-info h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.course-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+}
+
+.course-meta span.rating {
+  color: var(--accent-lime);
+}
+
+.course-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-glow {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-glow.green { background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
+.status-glow.yellow { background: var(--accent-lime); box-shadow: 0 0 8px var(--accent-lime); }
+.status-glow.red { background: var(--accent-red); box-shadow: 0 0 8px var(--accent-red); }
+
+.status-lbl {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* --- AI MATE MATCHMAKER --- */
+.matchmaker-dashboard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 28px;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  align-items: center;
+}
+
+.radar-search-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 340px;
+}
+
+.match-radar {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 1px solid var(--border-glow-green);
+  position: relative;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
+}
+
+.match-radar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 1px dashed rgba(16, 185, 129, 0.15);
+}
+
+.match-radar::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.radar-sweep-green {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(16, 185, 129, 0.25) 0deg, transparent 120deg, transparent 360deg);
+  animation: spin 3s linear infinite;
+  transform-origin: center;
+  display: none;
+}
+
+.radar-sweep-green.active {
+  display: block;
+}
+
+.radar-center-ping {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent-emerald);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent-emerald);
+}
+
+.radar-scanner-blips {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.blip {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-lime);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-lime);
+  opacity: 0;
+}
+
+.radar-search-container button.btn-radar {
+  position: absolute;
+  z-index: 10;
+}
+
+.matching-results-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  justify-content: center;
+}
+
+.matching-placeholder {
+  text-align: center;
+  color: var(--text-dimmed);
+  font-size: 0.95rem;
+  padding: 40px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 20px;
+}
+
+.matching-results-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.matching-results-list.active {
+  display: flex;
+}
+
+.mate-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mate-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(139, 92, 246, 0.3);
+  transform: translateX(4px);
+}
+
+.mate-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.4rem;
+}
+
+.mate-details {
+  flex: 1;
+}
+
+.mate-details h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.mate-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mate-tags span {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+}
+
+.mate-match-score {
+  text-align: right;
+}
+
+.mate-match-score label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  display: block;
+}
+
+.mate-match-score .score-pct {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-lime);
+}
+
+/* --- WAIPHA STRATEGY VALUE GRID --- */
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.strategy-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.strategy-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.strategy-card:hover {
+  border-color: rgba(163, 230, 53, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(163, 230, 53, 0.1);
+}
+
+.strategy-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(163, 230, 53, 0.05);
+  border: 1px solid rgba(163, 230, 53, 0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--accent-lime);
+  margin-bottom: 24px;
+  font-size: 1.25rem;
+}
+
+.strategy-card.wellness-highlight {
+  grid-column: span 2;
+  background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.05) 0%, var(--bg-card) 60%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.strategy-card.wellness-highlight:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(139, 92, 246, 0.2);
+}
+
+.strategy-card.wellness-highlight .strategy-icon {
+  background: rgba(139, 92, 246, 0.05);
+  border-color: rgba(139, 92, 246, 0.2);
+  color: var(--accent-violet);
+}
+
+.strategy-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.strategy-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.wellness-benefit-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-violet);
+  margin-top: 16px;
+}
+
+/* --- FINANCIAL TRANSPARENCY SHIELD --- */
+.accounting-dashboard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 28px;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.accounting-pie-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.accounting-pie-mock {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent-lime) 0% 38%,
+    var(--accent-emerald) 38% 64%,
+    var(--accent-violet) 64% 74%,
+    #ffb800 74% 80%,
+    rgba(255, 255, 255, 0.1) 80% 100%
+  );
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(0, 0, 0, 0.4);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.accounting-pie-mock::before {
+  content: '';
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  background-color: var(--bg-card);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.accounting-pie-center-val {
+  position: absolute;
+  text-align: center;
+  z-index: 2;
+}
+
+.accounting-pie-center-val label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+}
+
+.accounting-pie-center-val .amt {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.accounting-ledger-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.accounting-ledger-panel h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ledger-btn-toggle {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.ledger-btn-toggle:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-white);
+}
+
+.ledger-table {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ledger-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.ledger-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ledger-bullet-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ledger-bullet-color.c1 { background-color: var(--accent-lime); }
+.ledger-bullet-color.c2 { background-color: var(--accent-emerald); }
+.ledger-bullet-color.c3 { background-color: var(--accent-violet); }
+.ledger-bullet-color.c4 { background-color: #ffb800; }
+.ledger-bullet-color.c5 { background-color: rgba(255, 255, 255, 0.3); }
+
+.ledger-row span.name {
+  color: var(--text-white);
+  font-weight: 500;
+}
+
+.ledger-row span.val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ledger-row.highlight {
+  background: rgba(163, 230, 53, 0.03);
+  border: 1px solid rgba(163, 230, 53, 0.1);
+}
+
+.ledger-row.highlight span.val {
+  color: var(--accent-lime);
+}
+
+/* --- PARTNERS MOU LOGO ROWS --- */
+.partners-section {
+  text-align: center;
+  padding: 80px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.partners-section label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  color: var(--text-dimmed);
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  display: block;
+}
+
+.partners-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.partner-logo {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dimmed);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.partner-logo svg {
+  fill: currentColor;
+  opacity: 0.4;
+}
+
+/* --- FOOTER --- */
+footer {
+  background: #010201;
+  border-top: 1px solid var(--border-subtle);
+  padding: 80px 24px 40px 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 48px;
+  margin-bottom: 60px;
+}
+
+.footer-brand h3 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.footer-brand h3 span {
+  background: var(--gradient-emerald-lime);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.footer-brand p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.footer-links h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text-white);
+}
+
+.footer-links ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-links ul a {
+  text-decoration: none;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.footer-links ul a:hover {
+  color: var(--accent-lime);
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer-legal-text {
+  font-size: 0.75rem;
+  color: var(--text-dimmed);
+  max-width: 650px;
+  line-height: 1.5;
+}
+
+.footer-copy {
+  font-size: 0.8rem;
+  color: var(--text-dimmed);
+  font-family: var(--font-mono);
+}
+
+/* --- RESPONSIVE STYLES --- */
+@media (max-width: 1024px) {
+  .hero h1 { font-size: 3.5rem; }
+  .split-layout { grid-template-columns: 1fr; gap: 48px; }
+  .analyzer-dashboard, .healthcare-dashboard, .matchmaker-dashboard, .accounting-dashboard {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .strategy-grid { grid-template-columns: repeat(2, 1fr); }
+  .strategy-card.wellness-highlight { grid-column: span 2; }
+}
+
+@media (max-width: 768px) {
+  header { padding: 0 20px; }
+  nav { display: none; }
+  .mobile-menu-btn { display: block; }
+
+  .hero h1 { font-size: 2.8rem; }
+  .hero p { font-size: 1.05rem; }
+  .hero-ctas { flex-direction: column; width: 100%; gap: 12px; }
+  .hero-ctas a { width: 100%; text-align: center; }
+
+  .section-header h2 { font-size: 2.2rem; }
+  .strategy-grid { grid-template-columns: 1fr; }
+  .strategy-card.wellness-highlight { grid-column: span 1; }
+
+  .footer-container { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; text-align: center; }
+}
+  </style>
 </head>
 <body>
 
@@ -47,7 +1794,11 @@
 
   <!-- Hero Section -->
   <section class="hero" id="hero-section">
-    <div class="hero-golf-wireframe"></div>
+    <!-- 배경 영상: hero-video.mp4 파일을 같은 폴더에 넣으면 자동 재생됩니다 -->
+    <video class="hero-video-bg" autoplay muted loop playsinline>
+      <source src="hero-video.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
     <div class="tag-badge scroll-reveal">Global Swing Standards</div>
     <h1 class="scroll-reveal">
       AI-Powered Swing Analysis
@@ -463,7 +2214,757 @@
     </div>
   </footer>
 
-  <!-- JavaScript -->
-  <script src="app.js"></script>
+  <!-- JavaScript (Inlined for standalone deployment) -->
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // --- 1. SCROLL REVEAL EFFECT & NAVBAR STYLING ---
+  const scrollElements = document.querySelectorAll('.scroll-reveal');
+  const navHeader = document.getElementById('nav-header');
+
+  const elementInView = (el, dividend = 1) => {
+    const elementTop = el.getBoundingClientRect().top;
+    return (elementTop <= (window.innerHeight || document.documentElement.clientHeight) / dividend);
+  };
+
+  const displayScrollElement = (element) => {
+    element.classList.add('revealed');
+  };
+
+  const handleScrollAnimation = () => {
+    scrollElements.forEach((el) => {
+      if (elementInView(el, 1.15)) {
+        displayScrollElement(el);
+      }
+    });
+
+    if (window.scrollY > 50) {
+      navHeader.classList.add('scrolled');
+    } else {
+      navHeader.classList.remove('scrolled');
+    }
+  };
+
+  window.addEventListener('scroll', handleScrollAnimation);
+  setTimeout(handleScrollAnimation, 150);
+
+
+  // --- 2. THE PROBLEM & SOLUTION CONTRAST ROWS ---
+  const contrastRows = document.querySelectorAll('.contrast-row');
+  const radarTargets = document.querySelectorAll('.radar-target');
+
+  const radarPositions = [
+    { t1: { top: '48%', left: '48%' }, t2: { top: '50%', left: '52%' }, t3: { top: '51%', left: '49%' } },
+    { t1: { top: '25%', left: '35%' }, t2: { top: '65%', left: '70%' }, t3: { top: '75%', left: '20%' } },
+    { t1: { top: '15%', left: '48%' }, t2: { top: '85%', left: '48%' }, t3: { top: '50%', left: '80%' } },
+    { t1: { top: '30%', left: '20%' }, t2: { top: '32%', left: '80%' }, t3: { top: '80%', left: '50%' } }
+  ];
+
+  contrastRows.forEach((row) => {
+    row.addEventListener('click', () => {
+      contrastRows.forEach(r => r.classList.remove('active'));
+      row.classList.add('active');
+
+      const index = parseInt(row.getAttribute('data-index'), 10);
+      const pos = radarPositions[index];
+
+      radarTargets[0].style.top = pos.t1.top;
+      radarTargets[0].style.left = pos.t1.left;
+      radarTargets[1].style.top = pos.t2.top;
+      radarTargets[1].style.left = pos.t2.left;
+      radarTargets[2].style.top = pos.t3.top;
+      radarTargets[2].style.left = pos.t3.left;
+    });
+  });
+
+
+  // --- 3. INTERACTIVE AI SWING ANALYZER ENGINE ---
+  const canvas = document.getElementById('swing-canvas');
+  const ctx = canvas.getContext('2d');
+
+  const btnShotDriver = document.getElementById('btn-shot-driver');
+  const btnShotPutt = document.getElementById('btn-shot-putt');
+  const btnStartAnalysis = document.getElementById('btn-start-analysis');
+  const analysisOverlay = document.getElementById('analysis-overlay');
+  const analysisText = document.getElementById('analysis-text');
+  const hudWarning = document.getElementById('hud-warning');
+
+  const teleSpine = document.getElementById('tele-spine');
+  const teleArc = document.getElementById('tele-arc');
+  const teleTempo = document.getElementById('tele-tempo');
+  const teleHead = document.getElementById('tele-head');
+
+  const reportPlaceholder = document.getElementById('report-placeholder');
+  const reportContent = document.getElementById('report-content');
+  const reportShotTitle = document.getElementById('report-shot-title');
+  const reportScore = document.getElementById('report-score');
+  const reportBullets = document.getElementById('report-bullets');
+
+  let activeShot = 'driver';
+  let isAnalyzing = false;
+  let currentProgress = 0.0;
+  let pathTrace = [];
+  let lastTime = 0;
+
+  let mouseX = -9999;
+  let mouseY = -9999;
+  let mouseActive = false;
+
+  const resizeCanvas = () => {
+    const rect = canvas.parentNode.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  };
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    mouseActive = true;
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    mouseX = -9999;
+    mouseY = -9999;
+    mouseActive = false;
+  });
+
+  canvas.addEventListener('mouseenter', () => {
+    mouseActive = true;
+  });
+
+  const getSwingKeyframes = (shotType) => {
+    if (shotType === 'driver') {
+      return [
+        { progress: 0.0, spineAngle: 122, wristCock: 180, shoulderRot: 0, clubExt: 110, headX: 0, headY: 0 },
+        { progress: 0.1, spineAngle: 121, wristCock: 175, shoulderRot: 15, clubExt: 115, headX: 2, headY: 1 },
+        { progress: 0.2, spineAngle: 120, wristCock: 150, shoulderRot: 40, clubExt: 120, headX: 8, headY: 3 },
+        { progress: 0.3, spineAngle: 118, wristCock: 95, shoulderRot: 85, clubExt: 125, headX: 14, headY: 5 },
+        { progress: 0.4, spineAngle: 120, wristCock: 100, shoulderRot: 65, clubExt: 123, headX: 10, headY: 3 },
+        { progress: 0.5, spineAngle: 122, wristCock: 135, shoulderRot: 30, clubExt: 121, headX: 4, headY: 1 },
+        { progress: 0.6, spineAngle: 124, wristCock: 178, shoulderRot: -10, clubExt: 120, headX: -2, headY: 0 },
+        { progress: 0.75, spineAngle: 126, wristCock: 145, shoulderRot: -45, clubExt: 123, headX: -6, headY: 1 },
+        { progress: 0.9, spineAngle: 128, wristCock: 110, shoulderRot: -80, clubExt: 126, headX: -10, headY: 4 },
+        { progress: 1.0, spineAngle: 130, wristCock: 90, shoulderRot: -90, clubExt: 128, headX: -12, headY: 5 }
+      ];
+    } else {
+      return [
+        { progress: 0.0, spineAngle: 105, wristCock: 180, shoulderRot: 0, clubExt: 90, headX: 0, headY: 0 },
+        { progress: 0.15, spineAngle: 105, wristCock: 180, shoulderRot: 8, clubExt: 90, headX: 0, headY: 0 },
+        { progress: 0.3, spineAngle: 105, wristCock: 180, shoulderRot: 16, clubExt: 90, headX: 0, headY: 0 },
+        { progress: 0.45, spineAngle: 105, wristCock: 180, shoulderRot: 8, clubExt: 90, headX: 0, headY: 0 },
+        { progress: 0.6, spineAngle: 105, wristCock: 180, shoulderRot: 0, clubExt: 90, headX: 0, headY: 0 },
+        { progress: 0.8, spineAngle: 105, wristCock: 180, shoulderRot: -12, clubExt: 90, headX: 0, headY: 0 },
+        { progress: 1.0, spineAngle: 105, wristCock: 180, shoulderRot: -20, clubExt: 90, headX: 0, headY: 0 }
+      ];
+    }
+  };
+
+  const interpolate = (kfs, ratio) => {
+    if (ratio <= 0) return kfs[0];
+    if (ratio >= 1) return kfs[kfs.length - 1];
+
+    let segment = 0;
+    for (let i = 0; i < kfs.length - 1; i++) {
+      if (ratio >= kfs[i].progress && ratio <= kfs[i + 1].progress) {
+        segment = i;
+        break;
+      }
+    }
+
+    const kfStart = kfs[segment];
+    const kfEnd = kfs[segment + 1];
+    const segRatio = (ratio - kfStart.progress) / (kfEnd.progress - kfStart.progress);
+
+    const res = {};
+    for (let key in kfStart) {
+      res[key] = kfStart[key] + (kfEnd[key] - kfStart[key]) * segRatio;
+    }
+    return res;
+  };
+
+  const getDistanceToSegment = (px, py, x1, y1, x2, y2) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const l2 = dx * dx + dy * dy;
+    if (l2 === 0) return Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1));
+
+    let t = ((px - x1) * dx + (py - y1) * dy) / l2;
+    t = Math.max(0, Math.min(1, t));
+
+    const projX = x1 + t * dx;
+    const projY = y1 + t * dy;
+
+    const diffX = px - projX;
+    const diffY = py - projY;
+    return Math.sqrt(diffX * diffX + diffY * diffY);
+  };
+
+  const asciiChars = 'WAIPHA.AI.GOLF.1.0.$#@*+-';
+  let colOffsets = [];
+  let colSpeeds = [];
+  const maxCols = 250;
+  for (let i = 0; i < maxCols; i++) {
+    colOffsets.push(Math.random() * 100);
+    colSpeeds.push(0.04 + Math.random() * 0.08);
+  }
+
+  const updateGridScroll = () => {
+    for (let i = 0; i < colOffsets.length; i++) {
+      colOffsets[i] += colSpeeds[i];
+    }
+  };
+
+  const updateTelemetryUI = (kf, progress) => {
+    if (!teleSpine || !teleArc || !teleTempo || !teleHead) return;
+    teleSpine.innerHTML = `${Math.round(kf.spineAngle)}<span>deg</span>`;
+
+    const arcPct = activeShot === 'driver' ?
+      Math.round(75 + progress * 13) :
+      Math.round(85 + progress * 13);
+    teleArc.innerHTML = `${arcPct}<span>%</span>`;
+
+    const tempoRatio = activeShot === 'driver' ? '2.8' : '1.8';
+    teleTempo.innerHTML = `${tempoRatio}<span>: 1</span>`;
+
+    const headPct = activeShot === 'driver' ?
+      Math.round(95 - kf.headX * 3) :
+      Math.round(99 - progress * 1);
+    teleHead.innerHTML = `${headPct}<span>%</span>`;
+  };
+
+  const updateAnalysisStatusText = (progress) => {
+    if (!analysisText) return;
+    if (progress < 0.25) {
+      analysisText.innerText = '골격 관절 노드 검출 중 (Pose Detection)...';
+    } else if (progress < 0.6) {
+      analysisText.innerText = '백스윙 궤적 비선형 오차 측정 중...';
+      if (activeShot === 'driver' && hudWarning) hudWarning.style.display = 'block';
+    } else if (progress < 0.85) {
+      analysisText.innerText = '임팩트 구간 가속 텔레메트리 보간 중...';
+    } else {
+      analysisText.innerText = '스윙 자세 적합도 계산 완료! 보고서 생성 중...';
+    }
+  };
+
+  const showActiveCoachingReport = () => {
+    if (!reportShotTitle || !reportScore || !reportBullets) return;
+    if (activeShot === 'driver') {
+      reportShotTitle.innerText = 'AI DRIVER SHOT REPORT';
+      reportScore.innerText = '88 PTS';
+      reportScore.style.background = 'var(--accent-lime)';
+      reportBullets.innerHTML = `
+        <li class="good"><strong>백스윙 탑 척추각 각도 최적 (118도)</strong>: 척추 꼬임이 충분하여 강력한 원심력을 확보하였습니다.</li>
+        <li class="good"><strong>코킹 유지율 탁월 (88%)</strong>: 다운스윙 전환 시 캐스팅(풀림) 현상 없이 레이트 히팅 궤적을 실현했습니다.</li>
+        <li class="bad"><strong>백스윙 시 머리 고정력 보완 필요 (감점)</strong>: 백스윙 중 머리가 우측으로 약 14px 흔들리며 미세한 슬라이스 궤도가 검출되었습니다.</li>
+        <li style="margin-top: 10px; color: var(--accent-lime);"><em>AI 처방: 어드레스 시선 고정 훈련 15회 권장. 테이크백 단계에서 왼쪽 어깨가 들어올 때 턱이 함께 들리지 않도록 고정하세요.</em></li>
+      `;
+    } else {
+      reportShotTitle.innerText = 'AI PUTTING SHOT REPORT';
+      reportScore.innerText = '98 PTS';
+      reportScore.style.background = 'var(--accent-emerald)';
+      reportBullets.innerHTML = `
+        <li class="good"><strong>손목 잠금력 완벽 (180도 고정)</strong>: 스트로크 전 과정에서 손목의 불필요한 개입이 완전히 통제되었습니다.</li>
+        <li class="good"><strong>PENDULUM 진자 운동 일치 (98%)</strong>: 테이크백과 팔로우스루의 비율이 1:1에 완벽히 부합하는 대칭 운동이 수행되었습니다.</li>
+        <li class="good"><strong>머리 수평 편차 제로 (0px)</strong>: 스트로크 완료 시까지 시선과 헤드 스태빌리티가 완벽하게 유지되었습니다.</li>
+        <li style="margin-top: 10px; color: var(--accent-emerald);"><em>AI 처방: 우수한 폼입니다. 현재의 어깨 흔들림 진자 운동의 감각을 필드에서도 유지하여 균일한 임팩트를 지속해 나가십시오.</em></li>
+      `;
+    }
+  };
+
+  const drawGolferAscii = (kf) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.7;
+
+    const scale = activeShot === 'driver' ? 1.45 : 1.6;
+    const hipsY = cy;
+    const hipsX = cx + (activeShot === 'driver' ? -20 : 0);
+
+    const spineLen = 60 * scale;
+    const spineAngleRad = (kf.spineAngle * Math.PI) / 180;
+    const shoulderX = hipsX + spineLen * Math.cos(spineAngleRad);
+    const shoulderY = hipsY - spineLen * Math.sin(spineAngleRad);
+
+    const neckLen = 15 * scale;
+    const headX = shoulderX + neckLen * Math.cos(spineAngleRad) + kf.headX;
+    const headY = shoulderY - neckLen * Math.sin(spineAngleRad) - kf.headY;
+    const headRadius = 10 * scale;
+
+    const shRotRad = (kf.shoulderRot * Math.PI) / 180;
+    const shoulderOffset = 20 * scale * Math.cos(shRotRad);
+    const shLX = shoulderX - shoulderOffset;
+    const shLY = shoulderY;
+    const shRX = shoulderX + shoulderOffset;
+    const shRY = shoulderY;
+
+    const upperArmLen = 35 * scale;
+    const foreArmLen = 30 * scale;
+    const armAngleRad = (130 * Math.PI) / 180 + (kf.shoulderRot * 0.5 * Math.PI) / 180;
+    const elRX = shRX + upperArmLen * Math.sin(armAngleRad);
+    const elRY = shRY + upperArmLen * Math.cos(armAngleRad);
+
+    const wristAngleRad = armAngleRad + (20 * Math.PI) / 180;
+    const wrRX = elRX + foreArmLen * Math.sin(wristAngleRad);
+    const wrRY = elRY + foreArmLen * Math.cos(wristAngleRad);
+
+    const clubLen = (activeShot === 'driver' ? 95 : 80) * scale;
+    const wristCockRad = (kf.wristCock * Math.PI) / 180;
+    const clubAngleRad = wristAngleRad - (Math.PI - wristCockRad);
+    const clubHeadX = wrRX + clubLen * Math.sin(clubAngleRad);
+    const clubHeadY = wrRY + clubLen * Math.cos(clubAngleRad);
+
+    const legLen = 70 * scale;
+    const footLX = hipsX - 25 * scale;
+    const footLY = hipsY + legLen;
+    const footRX = hipsX + 25 * scale;
+    const footRY = hipsY + legLen;
+
+    if (isAnalyzing) {
+      pathTrace.push({ x: clubHeadX, y: clubHeadY });
+    }
+
+    const cellWidth = 10;
+    const cellHeight = 14;
+    const cols = Math.ceil(canvas.width / cellWidth);
+    const rows = Math.ceil(canvas.height / cellHeight);
+
+    ctx.font = "bold 12px 'Courier New', Courier, monospace";
+
+    for (let col = 0; col < cols; col++) {
+      const scrollOffset = colOffsets[col % colOffsets.length];
+
+      for (let row = 0; row < rows; row++) {
+        const cx_cell = col * cellWidth + cellWidth / 2;
+        const cy_cell = row * cellHeight + cellHeight / 2;
+
+        const distHead = Math.sqrt((cx_cell - headX) * (cx_cell - headX) + (cy_cell - headY) * (cy_cell - headY));
+        const distSpine = getDistanceToSegment(cx_cell, cy_cell, hipsX, hipsY, shoulderX, shoulderY);
+        const distShoulders = getDistanceToSegment(cx_cell, cy_cell, shLX, shLY, shRX, shRY);
+        const distUpperArm = getDistanceToSegment(cx_cell, cy_cell, shRX, shRY, elRX, elRY);
+        const distForearm = getDistanceToSegment(cx_cell, cy_cell, elRX, elRY, wrRX, wrRY);
+        const distLeftLeg = getDistanceToSegment(cx_cell, cy_cell, hipsX, hipsY, footLX, footLY);
+        const distRightLeg = getDistanceToSegment(cx_cell, cy_cell, hipsX, hipsY, footRX, footRY);
+        const distClub = getDistanceToSegment(cx_cell, cy_cell, wrRX, wrRY, clubHeadX, clubHeadY);
+
+        const distBody = Math.min(distSpine, distShoulders, distUpperArm, distForearm, distLeftLeg, distRightLeg);
+
+        let distPath = 9999;
+        if (pathTrace.length > 1) {
+          const step = Math.max(1, Math.floor(pathTrace.length / 40));
+          for (let i = 0; i < pathTrace.length - 1; i += step) {
+            const nextIdx = Math.min(pathTrace.length - 1, i + step);
+            const d = getDistanceToSegment(cx_cell, cy_cell, pathTrace[i].x, pathTrace[i].y, pathTrace[nextIdx].x, pathTrace[nextIdx].y);
+            if (d < distPath) distPath = d;
+          }
+        }
+
+        let charType = 'bg';
+        let intensity = 0.0;
+        let baseColor = 'rgba(255, 255, 255, 0.02)';
+
+        if (distHead < headRadius) {
+          charType = 'head';
+          intensity = 1.0;
+        } else if (distBody < 14) {
+          charType = 'body';
+          intensity = Math.max(0.2, 1.0 - distBody / 14);
+        } else if (distClub < 8) {
+          charType = 'club';
+          intensity = Math.max(0.3, 1.0 - distClub / 8);
+        } else if (distHead < headRadius + 12) {
+          charType = 'head-glow';
+          intensity = 0.3 * (1.0 - (distHead - headRadius) / 12);
+        } else if (distPath < 8) {
+          charType = 'path';
+          intensity = 0.8 * (1.0 - distPath / 8);
+        }
+
+        if (charType === 'head' || charType === 'body' || charType === 'head-glow') {
+          const alpha = charType === 'head-glow' ? intensity * 0.45 : intensity * 0.95;
+          baseColor = activeShot === 'driver' ? `rgba(163, 230, 53, ${alpha})` : `rgba(16, 185, 129, ${alpha})`;
+        } else if (charType === 'club') {
+          baseColor = `rgba(255, 255, 255, ${intensity * 0.9})`;
+        } else if (charType === 'path') {
+          baseColor = `rgba(139, 92, 246, ${intensity * 0.8})`;
+        } else {
+          baseColor = 'rgba(255, 255, 255, 0.035)';
+        }
+
+        let drawX = cx_cell;
+        let drawY = cy_cell;
+
+        if (mouseActive) {
+          const dx = cx_cell - mouseX;
+          const dy = cy_cell - mouseY;
+          const distMouse = Math.sqrt(dx * dx + dy * dy);
+          const mouseRadius = 100;
+
+          if (distMouse < mouseRadius) {
+            const force = (mouseRadius - distMouse) / mouseRadius;
+            const angle = Math.atan2(dy, dx);
+
+            drawX += Math.cos(angle) * force * 28;
+            drawY += Math.sin(angle) * force * 28;
+
+            if (charType !== 'bg') {
+              baseColor = `rgba(0, 243, 255, ${Math.max(0.6, intensity * 1.25)})`;
+            } else {
+              baseColor = `rgba(244, 63, 94, ${force * 0.35})`;
+            }
+          }
+        }
+
+        const charIdx = (row + Math.floor(scrollOffset)) % asciiChars.length;
+        const char = asciiChars[charIdx >= 0 ? charIdx : 0];
+
+        ctx.fillStyle = baseColor;
+        ctx.fillText(char, drawX - cellWidth / 2, drawY + cellHeight / 2);
+      }
+    }
+
+    if (isAnalyzing && activeShot === 'driver' && kf.headX > 6) {
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+      ctx.font = "bold 12px 'Courier New', monospace";
+      ctx.fillText("<< WARNING: HEAD SWAY DETECTED >>", canvas.width / 2 - 110, 40);
+    }
+  };
+
+  const updateLoop = (timestamp) => {
+    if (!lastTime) lastTime = timestamp;
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
+    const duration = activeShot === 'driver' ? 3200 : 2500;
+
+    if (isAnalyzing) {
+      currentProgress += deltaTime / duration;
+
+      if (currentProgress >= 1) {
+        currentProgress = 1.0;
+        isAnalyzing = false;
+
+        analysisOverlay.classList.remove('active');
+        btnStartAnalysis.disabled = false;
+
+        reportPlaceholder.style.display = 'none';
+        reportContent.classList.add('active');
+        showActiveCoachingReport();
+      }
+
+      updateAnalysisStatusText(currentProgress);
+    }
+
+    updateGridScroll();
+
+    const kfs = getSwingKeyframes(activeShot);
+    const currentKf = interpolate(kfs, currentProgress);
+
+    if (isAnalyzing) {
+      updateTelemetryUI(currentKf, currentProgress);
+    }
+
+    drawGolferAscii(currentKf);
+
+    requestAnimationFrame(updateLoop);
+  };
+
+  requestAnimationFrame(updateLoop);
+
+  const startSwingAnimation = () => {
+    pathTrace = [];
+    currentProgress = 0.0;
+    isAnalyzing = true;
+
+    analysisOverlay.classList.add('active');
+    analysisText.innerText = '비디오 로드 및 골격 관절 노드 초기화 중...';
+    btnStartAnalysis.disabled = true;
+    if (hudWarning) hudWarning.style.display = 'none';
+
+    reportContent.classList.remove('active');
+    reportPlaceholder.style.display = 'block';
+  };
+
+  btnStartAnalysis.addEventListener('click', () => {
+    if (isAnalyzing) return;
+    startSwingAnimation();
+  });
+
+  btnShotDriver.addEventListener('click', () => {
+    if (isAnalyzing) return;
+    activeShot = 'driver';
+    btnShotDriver.classList.add('active');
+    btnShotPutt.classList.remove('active');
+    if (hudWarning) hudWarning.style.display = 'none';
+
+    currentProgress = 0.0;
+    pathTrace = [];
+
+    teleSpine.innerHTML = '--<span>deg</span>';
+    teleArc.innerHTML = '--<span>%</span>';
+    teleTempo.innerHTML = '--<span>: 1</span>';
+    teleHead.innerHTML = '--<span>%</span>';
+    reportContent.classList.remove('active');
+    reportPlaceholder.style.display = 'block';
+  });
+
+  btnShotPutt.addEventListener('click', () => {
+    if (isAnalyzing) return;
+    activeShot = 'putting';
+    btnShotPutt.classList.add('active');
+    btnShotDriver.classList.remove('active');
+    if (hudWarning) hudWarning.style.display = 'none';
+
+    currentProgress = 0.0;
+    pathTrace = [];
+
+    teleSpine.innerHTML = '--<span>deg</span>';
+    teleArc.innerHTML = '--<span>%</span>';
+    teleTempo.innerHTML = '--<span>: 1</span>';
+    teleHead.innerHTML = '--<span>%</span>';
+    reportContent.classList.remove('active');
+    reportPlaceholder.style.display = 'block';
+  });
+
+
+  // --- 4. WEARABLE HEALTHCARE DATA SIMULATOR ---
+  const watchHr = document.getElementById('watch-hr');
+
+  let baseHr = 72;
+  setInterval(() => {
+    const change = Math.floor(Math.random() * 3) - 1;
+    baseHr = Math.max(68, Math.min(82, baseHr + change));
+    if (watchHr) {
+      watchHr.innerText = baseHr;
+    }
+  }, 3500);
+
+
+  // --- 5. AI COURSE FINDER & CONGESTION PREDICTOR ---
+  const sliderDiff = document.getElementById('slider-diff');
+  const sliderWait = document.getElementById('slider-wait');
+  const valDiff = document.getElementById('val-diff');
+  const valWait = document.getElementById('val-wait');
+  const courseListContainer = document.getElementById('course-list-container');
+
+  const coursesData = [
+    { name: '여의도 한강 AI 파크골프장', difficulty: 1, maxWait: 20, rating: '4.8', distance: '1.2km', status: 'green', statusText: '원활 (대기없음)' },
+    { name: '탄천 웰니스 파크골프장', difficulty: 2, maxWait: 40, rating: '4.6', distance: '3.4km', status: 'yellow', statusText: '보통 (대기 2팀)' },
+    { name: '잠실 스마트 파크골프장', difficulty: 1, maxWait: 60, rating: '4.9', distance: '5.8km', status: 'red', statusText: '혼잡 (대기 6팀)' },
+    { name: '양재AI 힐링 포령 파크골프장', difficulty: 3, maxWait: 30, rating: '4.7', distance: '6.1km', status: 'green', statusText: '원활 (대기없음)' },
+    { name: '상암 시니어 복지 파크골프장', difficulty: 2, maxWait: 50, rating: '4.4', distance: '9.3km', status: 'yellow', statusText: '보통 (대기 3팀)' },
+    { name: '마포 난지 포용 파크골프장', difficulty: 1, maxWait: 15, rating: '4.5', distance: '8.0km', status: 'green', statusText: '원활 (대기없음)' },
+    { name: '서초 우면산 웰니스 파크골프장', difficulty: 3, maxWait: 80, rating: '4.7', distance: '12.4km', status: 'red', statusText: '혼잡 (대기 9팀)' }
+  ];
+
+  const updateCourseSelectorUI = () => {
+    const diffVal = parseInt(sliderDiff.value, 10);
+    const waitVal = parseInt(sliderWait.value, 10);
+
+    const diffLabels = ['초급 코스', '중급 코스', '상급 코스'];
+    valDiff.innerText = diffLabels[diffVal - 1];
+    valWait.innerText = `${waitVal}분 이하`;
+
+    const filteredCourses = coursesData.filter(course => {
+      return course.difficulty === diffVal && course.maxWait <= waitVal;
+    });
+
+    if (filteredCourses.length === 0) {
+      courseListContainer.innerHTML = `
+        <div class="matching-placeholder" style="padding: 24px; font-size: 0.85rem;">
+          [ 해당 조건(난이도/대기시간)과 일치하는 원활한 AI 추천 코스가 없습니다. 슬라이더 범위를 넓혀보세요 ]
+        </div>
+      `;
+    } else {
+      courseListContainer.innerHTML = filteredCourses.map(course => `
+        <div class="course-card scroll-reveal revealed">
+          <div class="course-info">
+            <h4>${course.name}</h4>
+            <div class="course-meta">
+              <span class="rating">★ ${course.rating}</span>
+              <span>거리: ${course.distance}</span>
+              <span>최대 대기: ${course.maxWait}분</span>
+            </div>
+          </div>
+          <div class="course-status">
+            <div class="status-glow ${course.status}"></div>
+            <span class="status-lbl">${course.statusText}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+  };
+
+  if (sliderDiff && sliderWait) {
+    sliderDiff.addEventListener('input', updateCourseSelectorUI);
+    sliderWait.addEventListener('input', updateCourseSelectorUI);
+    updateCourseSelectorUI();
+  }
+
+
+  // --- 6. AI MATE MATCHMAKER SCANNER ---
+  const btnStartMatching = document.getElementById('btn-start-matching');
+  const radarSweep = document.getElementById('radar-sweep-green');
+  const matchPlaceholder = document.getElementById('match-placeholder');
+  const matchList = document.getElementById('match-list');
+  const blipContainer = document.getElementById('blip-container');
+  const blips = blipContainer ? blipContainer.querySelectorAll('.blip') : [];
+
+  const matesData = [
+    { name: '박인태 시니어 회원', age: '65세', avatar: '👴', handicap: '+2', style: '매너 최우선 · 느긋한 동반 플레이 선호', score: '98%' },
+    { name: '김순옥 장애인 웰니스 회원', age: '71세', avatar: '👵', handicap: '+8', style: '동반자 격려 · 초보자 수용형 플레이', score: '94%' },
+    { name: '최현우 발기인 회원', age: '58세', avatar: '👨', handicap: '+5', style: 'AI 헬스데이터 지향 · 활력 템포', score: '89%' }
+  ];
+
+  if (btnStartMatching) {
+    btnStartMatching.addEventListener('click', () => {
+      if (btnStartMatching.disabled) return;
+
+      btnStartMatching.innerText = 'AI 동반 매너 분석 중...';
+      btnStartMatching.disabled = true;
+      radarSweep.classList.add('active');
+      matchList.classList.remove('active');
+      matchPlaceholder.style.display = 'block';
+      matchPlaceholder.innerText = '신체 핸디캡 일치율 및 골프 매너 평점 스캔 중...';
+
+      blips.forEach((blip, index) => {
+        setTimeout(() => {
+          blip.style.opacity = '1';
+          blip.style.transform = 'scale(2.5)';
+          blip.style.transition = 'all 0.5s ease-out';
+          setTimeout(() => {
+            blip.style.transform = 'scale(1)';
+            blip.style.transition = 'all 1s ease-in';
+          }, 500);
+        }, index * 400);
+      });
+
+      setTimeout(() => {
+        btnStartMatching.innerText = 'AI 동반자 재매칭 시작';
+        btnStartMatching.disabled = false;
+        radarSweep.classList.remove('active');
+
+        blips.forEach(blip => { blip.style.opacity = '0'; });
+
+        matchPlaceholder.style.display = 'none';
+        matchList.classList.add('active');
+
+        matchList.innerHTML = matesData.map(mate => `
+          <div class="mate-card">
+            <div class="mate-avatar">${mate.avatar}</div>
+            <div class="mate-details">
+              <h4>${mate.name} (${mate.age})</h4>
+              <div class="mate-tags">
+                <span>핸디캡: ${mate.handicap}타</span>
+                <span>${mate.style}</span>
+              </div>
+            </div>
+            <div class="mate-match-score">
+              <label>적합도</label>
+              <div class="score-pct">${mate.score}</div>
+            </div>
+          </div>
+        `).join('');
+
+      }, 2200);
+    });
+  }
+
+
+  // --- 7. FINANCIAL LEDGER AUDIT TOGGLE ---
+  const btnLedgerYear = document.getElementById('btn-ledger-year');
+  const ledgerTableContainer = document.getElementById('ledger-table-container');
+
+  let activeLedgerYear = 2026;
+
+  const ledgerData = {
+    2026: {
+      total: '1억 86,000,000 원 (총 예산)',
+      items: [
+        { name: 'AI 관절 스윙 분석기 & 플랫폼 모바일 앱 개발', val: '70,000,000 원', pct: '37.6%', type: 'c1' },
+        { name: '초고령자 및 장애인 웰니스 맞춤 프로그램 지원', val: '18,000,000 원', pct: '9.7%', type: 'c2' },
+        { name: '파크골프 지도자 및 AI 스포츠 관리자 양성 교육', val: '12,000,000 원', pct: '6.5%', type: 'c3' },
+        { name: '전국 홍보 리플렛 및 필드 스윙 체험 캠페인 비용', val: '12,000,000 원', pct: '6.5%', type: 'c4' },
+        { name: '사무 관리운영 물건비 및 행정비', val: '36,000,000 원', pct: '19.3%', type: 'c5' },
+        { name: '상근 전문 인력 인건비 (4인 기준 분할 세출)', val: '38,000,000 원', pct: '20.4%', type: 'c5' }
+      ]
+    },
+    2027: {
+      total: '11억 25,000,000 원 (승인된 세출예산안)',
+      items: [
+        { name: 'AI 생체 데이터 빅데이터 처리 인프라 및 앱 고도화', val: '410,000,000 원', pct: '36.4%', type: 'c1' },
+        { name: '제1회 WAIPHA 패럴림픽 파크골프 전국대회 개최 지원', val: '220,000,000 원', pct: '19.5%', type: 'c2' },
+        { name: '지역별 지부 3개소 설립 및 디지털 행정 인프라 확충', val: '250,000,000 원', pct: '22.2%', type: 'c5' },
+        { name: '문체부 스포츠지도자 연계 전문 자격 연수원 설립비', val: '110,000,000 원', pct: '9.8%', type: 'c3' },
+        { name: '확장된 사무국 고용 인력(IT/웰니스 전임) 인건비', val: '135,000,000 원', pct: '12.0%', type: 'c5' }
+      ]
+    }
+  };
+
+  const updateLedgerUI = () => {
+    const data = ledgerData[activeLedgerYear];
+    btnLedgerYear.innerText = activeLedgerYear === 2026 ? '2027 예산안 전환' : '2026 결산서 전환';
+
+    const pieCenterAmt = document.querySelector('.accounting-pie-center-val .amt');
+    const pieCenterLbl = document.querySelector('.accounting-pie-center-val label');
+
+    if (pieCenterAmt && pieCenterLbl) {
+      pieCenterLbl.innerText = `${activeLedgerYear} 연간 세출`;
+      pieCenterAmt.innerHTML = activeLedgerYear === 2026 ? '1억 86백만<span>원</span>' : '11억 25백만<span>원</span>';
+    }
+
+    const pieMock = document.querySelector('.accounting-pie-mock');
+    if (pieMock) {
+      if (activeLedgerYear === 2026) {
+        pieMock.style.background = `conic-gradient(
+          var(--accent-lime) 0% 38%,
+          var(--accent-emerald) 38% 48%,
+          var(--accent-violet) 48% 55%,
+          #ffb800 55% 61%,
+          rgba(255, 255, 255, 0.15) 61% 100%
+        )`;
+      } else {
+        pieMock.style.background = `conic-gradient(
+          var(--accent-lime) 0% 36%,
+          var(--accent-emerald) 36% 56%,
+          var(--accent-violet) 56% 66%,
+          #ffb800 66% 76%,
+          rgba(255, 255, 255, 0.15) 76% 100%
+        )`;
+      }
+    }
+
+    ledgerTableContainer.innerHTML = data.items.map(item => `
+      <div class="ledger-row scroll-reveal revealed">
+        <div class="ledger-item-info">
+          <div class="ledger-bullet-color ${item.type}"></div>
+          <span class="name">${item.name}</span>
+        </div>
+        <span class="val">${item.val} (${item.pct})</span>
+      </div>
+    `).join('') + `
+      <div class="ledger-row highlight scroll-reveal revealed">
+        <div class="ledger-item-info">
+          <div class="ledger-bullet-color c1"></div>
+          <strong><span class="name" style="color: var(--accent-lime)">세출 예산 합계 (Grand Total)</span></strong>
+        </div>
+        <strong><span class="val">${data.total}</span></strong>
+      </div>
+    `;
+  };
+
+  if (btnLedgerYear) {
+    btnLedgerYear.addEventListener('click', () => {
+      activeLedgerYear = activeLedgerYear === 2026 ? 2027 : 2026;
+      updateLedgerUI();
+    });
+    updateLedgerUI();
+  }
+
+});
+  </script>
 </body>
 </html>
