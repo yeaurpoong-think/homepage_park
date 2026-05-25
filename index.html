@@ -626,6 +626,16 @@ nav a:hover {
   display: block;
 }
 
+#swing-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+  z-index: 1;
+}
+
 .canvas-hud {
   position: absolute;
   top: 16px;
@@ -2116,7 +2126,10 @@ footer {
       <div class="video-container">
         <div class="canvas-player">
           <canvas id="swing-canvas"></canvas>
-          
+          <video id="swing-video" playsinline preload="metadata">
+            <source src="swing-demo.mp4" type="video/mp4">
+          </video>
+
           <div class="canvas-hud">
             <div class="hud-pill live"><span class="dot"></span>AI FEEDBACK STATUS: ACTIVE</div>
             <div class="hud-pill danger" id="hud-warning" style="display: none;"><span class="dot"></span>WARNING: HEAD MOTION DETECTED</div>
@@ -3182,9 +3195,42 @@ document.addEventListener('DOMContentLoaded', () => {
     reportPlaceholder.style.display = 'block';
   };
 
+  const swingVideo = document.getElementById('swing-video');
+  let videoPlaying = false;
+
   btnStartAnalysis.addEventListener('click', () => {
-    if (isAnalyzing) return;
-    startSwingAnimation();
+    if (isAnalyzing || videoPlaying) return;
+
+    // 상태 초기화
+    pathTrace = [];
+    currentProgress = 0.0;
+    btnStartAnalysis.disabled = true;
+    reportContent.classList.remove('active');
+    reportPlaceholder.style.display = 'block';
+    if (hudWarning) hudWarning.style.display = 'none';
+
+    // Phase 1: 실제 스윙 영상 재생
+    swingVideo.currentTime = 0;
+    swingVideo.style.display = 'block';
+    videoPlaying = true;
+    analysisOverlay.classList.add('active');
+    analysisText.innerText = 'AI 스윙 영상 분석 중... 관절 포인트 추적';
+
+    // Phase 2: 영상 종료 후 골격 AI 분석 시작
+    swingVideo.onended = () => {
+      swingVideo.style.display = 'none';
+      videoPlaying = false;
+      analysisText.innerText = '골격 관절 노드 검출 중 (Pose Detection)...';
+      isAnalyzing = true;
+    };
+
+    // 영상 로드 실패 시 골격 분석으로 바로 진입
+    swingVideo.play().catch(() => {
+      swingVideo.style.display = 'none';
+      videoPlaying = false;
+      isAnalyzing = true;
+      analysisText.innerText = '영상 로드 중... 골격 관절 노드 초기화';
+    });
   });
 
   btnShotDriver.addEventListener('click', () => {
