@@ -248,7 +248,7 @@ nav a:hover {
   overflow: hidden;
 }
 
-.hero > *:not(.hero-video-bg):not(.hero-overlay) {
+.hero > *:not(.hero-video-bg):not(.hero-overlay):not(#hero-ascii-canvas) {
   position: relative;
   z-index: 2;
 }
@@ -278,6 +278,16 @@ nav a:hover {
   );
   z-index: 1;
   pointer-events: none;
+}
+
+#hero-ascii-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  display: block;
 }
 
 .tag-badge {
@@ -2020,6 +2030,7 @@ footer {
       <source src="hero-video.mp4" type="video/mp4">
     </video>
     <div class="hero-overlay"></div>
+    <canvas id="hero-ascii-canvas" aria-hidden="true"></canvas>
     <div class="tag-badge scroll-reveal">Global Swing Standards</div>
     <h1 class="scroll-reveal">
       AI-Powered Swing Analysis
@@ -3561,6 +3572,113 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 600);
     });
   }
+
+  // --- HERO ASCII PARK GOLF CLUB ANIMATION ---
+  (function() {
+    const heroCanvas = document.getElementById('hero-ascii-canvas');
+    if (!heroCanvas) return;
+    const hCtx = heroCanvas.getContext('2d');
+    let hW, hH;
+
+    function resize() {
+      const rect = heroCanvas.getBoundingClientRect();
+      hW = heroCanvas.width  = (rect.width  > 0 ? rect.width  : window.innerWidth);
+      hH = heroCanvas.height = (rect.height > 0 ? rect.height : window.innerHeight);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const SHAFT_CHARS = 'WAIPHA·AI·GOLF·';
+    const HEAD_ROWS   = ['━━━━━━━━━━━━━━━━━━━━', '████████████████████', '▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄'];
+
+    let t0 = null;
+
+    function easeOutBounce(t) {
+      const n1 = 7.5625, d1 = 2.75;
+      if (t < 1/d1)   return n1*t*t;
+      if (t < 2/d1)   return n1*(t -= 1.5/d1)*t + 0.75;
+      if (t < 2.5/d1) return n1*(t -= 2.25/d1)*t + 0.9375;
+      return n1*(t -= 2.625/d1)*t + 0.984375;
+    }
+
+    function heroFrame(ts) {
+      if (!t0) t0 = ts;
+      const ms = ts - t0;
+
+      hCtx.clearRect(0, 0, hW, hH);
+
+      const sc  = Math.min(hW, hH) / 700;
+      const fs  = Math.max(10, Math.round(14 * sc));
+      const cw  = fs * 0.63;
+      const ch  = fs;
+
+      // shaft: 2 chars wide × 22 rows tall
+      const sCols = 2, sRows = 22;
+      const sPxW  = sCols * cw;
+      const sPxH  = sRows * ch;
+      // head: 18 chars wide × 3 rows
+      const hCols = 18, hRows = 3;
+      const hPxW  = hCols * cw;
+
+      const DROP_DUR = 950;
+      const dropT    = Math.min(ms / DROP_DUR, 1);
+      const dropY    = easeOutBounce(dropT);
+
+      const cx      = hW * 0.72;
+      const finalCY = hH * 0.48;
+      const startCY = -(sPxH + hRows * ch + 40);
+      const cy      = startCY + (finalCY - startCY) * dropY;
+
+      const swingMs   = Math.max(0, ms - DROP_DUR * 0.8);
+      const swingFade = Math.min(swingMs / 700, 1);
+      const swingAmt  = Math.sin(swingMs / 3000 * Math.PI * 2) * 0.26 * swingFade;
+      const angle     = Math.PI / 9 + swingAmt;
+
+      hCtx.save();
+      hCtx.translate(cx, cy);
+      hCtx.rotate(angle);
+      hCtx.font = `bold ${fs}px 'Courier New', monospace`;
+
+      // Shaft — lime-to-cyan gradient
+      for (let r = 0; r < sRows; r++) {
+        for (let c = 0; c < sCols; c++) {
+          const x  = -sPxW / 2 + c * cw;
+          const y  = -sPxH / 2 + r * ch;
+          const ci = (r * sCols + c) % SHAFT_CHARS.length;
+          const t2 = r / sRows;
+          const rr = Math.round(163 + (34  - 163) * t2);
+          const gg = Math.round(230 + (211 - 230) * t2);
+          const bb = Math.round(53  + (238 - 53)  * t2);
+          hCtx.shadowColor = `rgb(${rr},${gg},${bb})`;
+          hCtx.shadowBlur  = 10;
+          hCtx.fillStyle   = `rgb(${rr},${gg},${bb})`;
+          hCtx.fillText(SHAFT_CHARS[ci], x, y);
+        }
+      }
+
+      // Club head — silver/white
+      const headColors  = ['rgba(203,213,225,0.92)', 'rgba(248,250,252,1)', 'rgba(100,116,139,0.75)'];
+      const headShadows = ['#94a3b8', '#f8fafc', '#334155'];
+      const headBlurs   = [8, 22, 6];
+      for (let r = 0; r < hRows; r++) {
+        const rowStr = HEAD_ROWS[r];
+        for (let c = 0; c < hCols; c++) {
+          const x  = -hPxW / 2 + c * cw;
+          const y  = sPxH / 2 + r * ch;
+          const ch2 = rowStr[c % rowStr.length];
+          hCtx.shadowColor = headShadows[r];
+          hCtx.shadowBlur  = headBlurs[r];
+          hCtx.fillStyle   = headColors[r];
+          hCtx.fillText(ch2, x, y);
+        }
+      }
+
+      hCtx.restore();
+      requestAnimationFrame(heroFrame);
+    }
+
+    requestAnimationFrame(heroFrame);
+  })();
 
   // --- MOBILE MENU TOGGLE ---
   const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
