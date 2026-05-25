@@ -676,7 +676,6 @@ nav a:hover {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--text-white);
-  display: flex;
   align-items: center;
   gap: 16px;
   min-width: 280px;
@@ -1749,6 +1748,21 @@ footer {
 @media (max-width: 768px) {
   header { padding: 0 20px; }
   nav { display: none; }
+  nav.mobile-open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: rgba(5, 10, 5, 0.98);
+    backdrop-filter: blur(16px);
+    padding: 20px 24px;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 999;
+  }
+  nav.mobile-open a { font-size: 1rem; padding: 8px 0; }
   .mobile-menu-btn { display: block; }
 
   .hero h1 { font-size: 2.8rem; }
@@ -2402,20 +2416,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.sqrt(diffX * diffX + diffY * diffY);
   };
 
-  const asciiChars = 'WAIPHA.AI.GOLF.1.0.$#@*+-';
-  let colOffsets = [];
-  let colSpeeds = [];
-  const maxCols = 250;
-  for (let i = 0; i < maxCols; i++) {
-    colOffsets.push(Math.random() * 100);
-    colSpeeds.push(0.04 + Math.random() * 0.08);
-  }
-
-  const updateGridScroll = () => {
-    for (let i = 0; i < colOffsets.length; i++) {
-      colOffsets[i] += colSpeeds[i];
-    }
-  };
+  let scanLineY = 0;
+  let scanDirection = 1;
 
   const updateTelemetryUI = (kf, progress) => {
     if (!teleSpine || !teleArc || !teleTempo || !teleHead) return;
@@ -2474,12 +2476,83 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const drawGolferAscii = (kf) => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const drawBone = (x1, y1, x2, y2, color, width) => {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width * 3;
+    ctx.globalAlpha = 0.18;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.stroke();
+  };
 
-    const cx = canvas.width / 2;
-    const cy = canvas.height * 0.7;
+  const drawJoint = (x, y, r, color, label) => {
+    ctx.beginPath();
+    ctx.arc(x, y, r + 5, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.35;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    if (label) {
+      ctx.font = "bold 9px 'Courier New', monospace";
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.85;
+      ctx.fillText(label, x + r + 5, y + 3);
+      ctx.globalAlpha = 1;
+    }
+  };
 
+  const drawGolfer = (kf) => {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background: park course
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.62);
+    skyGrad.addColorStop(0, '#030b06');
+    skyGrad.addColorStop(1, '#060f08');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H * 0.62);
+
+    const grassGrad = ctx.createLinearGradient(0, H * 0.62, 0, H);
+    grassGrad.addColorStop(0, '#071a09');
+    grassGrad.addColorStop(1, '#040c05');
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, H * 0.62, W, H * 0.38);
+
+    // Subtle grid
+    ctx.strokeStyle = 'rgba(16,185,129,0.04)';
+    ctx.lineWidth = 0.5;
+    for (let gx = 0; gx < W; gx += 38) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+    }
+    for (let gy = 0; gy < H; gy += 38) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    }
+
+    // Ground line
+    ctx.beginPath();
+    ctx.moveTo(0, H * 0.62);
+    ctx.lineTo(W, H * 0.62);
+    ctx.strokeStyle = 'rgba(16,185,129,0.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Compute joint positions
+    const cx = W / 2;
+    const cy = H * 0.68;
     const scale = activeShot === 'driver' ? 1.45 : 1.6;
     const hipsY = cy;
     const hipsX = cx + (activeShot === 'driver' ? -20 : 0);
@@ -2522,114 +2595,143 @@ document.addEventListener('DOMContentLoaded', () => {
     const footLY = hipsY + legLen;
     const footRX = hipsX + 25 * scale;
     const footRY = hipsY + legLen;
+    const kneeLX = (hipsX + footLX) / 2;
+    const kneeLY = (hipsY + footLY) / 2 - 8 * scale;
+    const kneeRX = (hipsX + footRX) / 2;
+    const kneeRY = (hipsY + footRY) / 2 - 8 * scale;
 
     if (isAnalyzing) {
       pathTrace.push({ x: clubHeadX, y: clubHeadY });
     }
 
-    const cellWidth = 10;
-    const cellHeight = 14;
-    const cols = Math.ceil(canvas.width / cellWidth);
-    const rows = Math.ceil(canvas.height / cellHeight);
-
-    ctx.font = "bold 12px 'Courier New', Courier, monospace";
-
-    for (let col = 0; col < cols; col++) {
-      const scrollOffset = colOffsets[col % colOffsets.length];
-
-      for (let row = 0; row < rows; row++) {
-        const cx_cell = col * cellWidth + cellWidth / 2;
-        const cy_cell = row * cellHeight + cellHeight / 2;
-
-        const distHead = Math.sqrt((cx_cell - headX) * (cx_cell - headX) + (cy_cell - headY) * (cy_cell - headY));
-        const distSpine = getDistanceToSegment(cx_cell, cy_cell, hipsX, hipsY, shoulderX, shoulderY);
-        const distShoulders = getDistanceToSegment(cx_cell, cy_cell, shLX, shLY, shRX, shRY);
-        const distUpperArm = getDistanceToSegment(cx_cell, cy_cell, shRX, shRY, elRX, elRY);
-        const distForearm = getDistanceToSegment(cx_cell, cy_cell, elRX, elRY, wrRX, wrRY);
-        const distLeftLeg = getDistanceToSegment(cx_cell, cy_cell, hipsX, hipsY, footLX, footLY);
-        const distRightLeg = getDistanceToSegment(cx_cell, cy_cell, hipsX, hipsY, footRX, footRY);
-        const distClub = getDistanceToSegment(cx_cell, cy_cell, wrRX, wrRY, clubHeadX, clubHeadY);
-
-        const distBody = Math.min(distSpine, distShoulders, distUpperArm, distForearm, distLeftLeg, distRightLeg);
-
-        let distPath = 9999;
-        if (pathTrace.length > 1) {
-          const step = Math.max(1, Math.floor(pathTrace.length / 40));
-          for (let i = 0; i < pathTrace.length - 1; i += step) {
-            const nextIdx = Math.min(pathTrace.length - 1, i + step);
-            const d = getDistanceToSegment(cx_cell, cy_cell, pathTrace[i].x, pathTrace[i].y, pathTrace[nextIdx].x, pathTrace[nextIdx].y);
-            if (d < distPath) distPath = d;
-          }
-        }
-
-        let charType = 'bg';
-        let intensity = 0.0;
-        let baseColor = 'rgba(255, 255, 255, 0.02)';
-
-        if (distHead < headRadius) {
-          charType = 'head';
-          intensity = 1.0;
-        } else if (distBody < 14) {
-          charType = 'body';
-          intensity = Math.max(0.2, 1.0 - distBody / 14);
-        } else if (distClub < 8) {
-          charType = 'club';
-          intensity = Math.max(0.3, 1.0 - distClub / 8);
-        } else if (distHead < headRadius + 12) {
-          charType = 'head-glow';
-          intensity = 0.3 * (1.0 - (distHead - headRadius) / 12);
-        } else if (distPath < 8) {
-          charType = 'path';
-          intensity = 0.8 * (1.0 - distPath / 8);
-        }
-
-        if (charType === 'head' || charType === 'body' || charType === 'head-glow') {
-          const alpha = charType === 'head-glow' ? intensity * 0.45 : intensity * 0.95;
-          baseColor = activeShot === 'driver' ? `rgba(163, 230, 53, ${alpha})` : `rgba(16, 185, 129, ${alpha})`;
-        } else if (charType === 'club') {
-          baseColor = `rgba(255, 255, 255, ${intensity * 0.9})`;
-        } else if (charType === 'path') {
-          baseColor = `rgba(139, 92, 246, ${intensity * 0.8})`;
-        } else {
-          baseColor = 'rgba(255, 255, 255, 0.035)';
-        }
-
-        let drawX = cx_cell;
-        let drawY = cy_cell;
-
-        if (mouseActive) {
-          const dx = cx_cell - mouseX;
-          const dy = cy_cell - mouseY;
-          const distMouse = Math.sqrt(dx * dx + dy * dy);
-          const mouseRadius = 100;
-
-          if (distMouse < mouseRadius) {
-            const force = (mouseRadius - distMouse) / mouseRadius;
-            const angle = Math.atan2(dy, dx);
-
-            drawX += Math.cos(angle) * force * 28;
-            drawY += Math.sin(angle) * force * 28;
-
-            if (charType !== 'bg') {
-              baseColor = `rgba(0, 243, 255, ${Math.max(0.6, intensity * 1.25)})`;
-            } else {
-              baseColor = `rgba(244, 63, 94, ${force * 0.35})`;
-            }
-          }
-        }
-
-        const charIdx = (row + Math.floor(scrollOffset)) % asciiChars.length;
-        const char = asciiChars[charIdx >= 0 ? charIdx : 0];
-
-        ctx.fillStyle = baseColor;
-        ctx.fillText(char, drawX - cellWidth / 2, drawY + cellHeight / 2);
+    // Club path trail
+    if (pathTrace.length > 2) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(pathTrace[0].x, pathTrace[0].y);
+      for (let i = 1; i < pathTrace.length; i++) {
+        ctx.lineTo(pathTrace[i].x, pathTrace[i].y);
       }
+      ctx.strokeStyle = 'rgba(139,92,246,0.55)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(pathTrace[0].x, pathTrace[0].y);
+      for (let i = 1; i < pathTrace.length; i++) {
+        ctx.lineTo(pathTrace[i].x, pathTrace[i].y);
+      }
+      ctx.strokeStyle = 'rgba(139,92,246,0.15)';
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.restore();
     }
 
+    const bodyColor = activeShot === 'driver' ? '#a3e635' : '#10b981';
+    const armColor  = '#22d3ee';
+    const legColor  = 'rgba(129,140,248,0.9)';
+    const clubColor = 'rgba(255,255,255,0.9)';
+
+    // Body skeleton bones
+    drawBone(hipsX, hipsY, shoulderX, shoulderY, bodyColor, 3);
+    drawBone(shLX, shLY, shRX, shRY, bodyColor, 2.5);
+    drawBone(shoulderX, shoulderY, headX, headY, bodyColor, 2);
+    drawBone(shRX, shRY, elRX, elRY, armColor, 3);
+    drawBone(elRX, elRY, wrRX, wrRY, armColor, 2.5);
+    drawBone(hipsX, hipsY, kneeLX, kneeLY, legColor, 3);
+    drawBone(kneeLX, kneeLY, footLX, footLY, legColor, 2.5);
+    drawBone(hipsX, hipsY, kneeRX, kneeRY, legColor, 3);
+    drawBone(kneeRX, kneeRY, footRX, footRY, legColor, 2.5);
+    drawBone(wrRX, wrRY, clubHeadX, clubHeadY, clubColor, 2);
+
+    // Head
+    const headGlow = ctx.createRadialGradient(headX, headY, 0, headX, headY, headRadius * 2.2);
+    headGlow.addColorStop(0, activeShot === 'driver' ? 'rgba(163,230,53,0.2)' : 'rgba(16,185,129,0.2)');
+    headGlow.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(headX, headY, headRadius * 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = headGlow;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(headX, headY, headRadius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(20,30,22,0.92)';
+    ctx.fill();
+    ctx.strokeStyle = bodyColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Head sway warning ring
     if (isAnalyzing && activeShot === 'driver' && kf.headX > 6) {
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
-      ctx.font = "bold 12px 'Courier New', monospace";
-      ctx.fillText("<< WARNING: HEAD SWAY DETECTED >>", canvas.width / 2 - 110, 40);
+      ctx.beginPath();
+      ctx.arc(headX, headY, headRadius + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(239,68,68,0.85)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Joint keypoints (only during analysis)
+    if (isAnalyzing) {
+      const jr = 4;
+      drawJoint(headX, headY, 3, bodyColor, 'NOSE');
+      drawJoint(shLX, shLY, jr, bodyColor, 'L.SH');
+      drawJoint(shRX, shRY, jr, bodyColor, 'R.SH');
+      drawJoint(hipsX, hipsY, jr + 1, bodyColor, 'HIP');
+      drawJoint(elRX, elRY, jr, armColor, 'ELBOW');
+      drawJoint(wrRX, wrRY, jr, armColor, 'WRIST');
+      drawJoint(kneeLX, kneeLY, jr, legColor, 'L.KN');
+      drawJoint(kneeRX, kneeRY, jr, legColor, 'R.KN');
+      drawJoint(footLX, footLY, jr, legColor, 'L.FT');
+      drawJoint(footRX, footRY, jr, legColor, 'R.FT');
+      drawJoint(clubHeadX, clubHeadY, 3, clubColor, 'CLUB');
+
+      // Spine angle arc + label
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(hipsX, hipsY, 32, -(Math.PI / 2), -(Math.PI / 2) + (Math.PI - spineAngleRad) * 0.7, false);
+      ctx.strokeStyle = 'rgba(251,191,36,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([2, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = "bold 10px 'Courier New', monospace";
+      ctx.fillStyle = 'rgba(251,191,36,0.8)';
+      ctx.fillText(Math.round(kf.spineAngle) + '°', shoulderX + 10, shoulderY - 6);
+      ctx.restore();
+    }
+
+    // Club head dot
+    ctx.beginPath();
+    ctx.arc(clubHeadX, clubHeadY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.fill();
+
+    // Scanning line
+    if (isAnalyzing) {
+      scanLineY += 1.8 * scanDirection;
+      if (scanLineY > H) scanDirection = -1;
+      if (scanLineY < 0) scanDirection = 1;
+      const scanGrad = ctx.createLinearGradient(0, scanLineY - 22, 0, scanLineY + 22);
+      scanGrad.addColorStop(0, 'transparent');
+      scanGrad.addColorStop(0.5, 'rgba(16,185,129,0.12)');
+      scanGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = scanGrad;
+      ctx.fillRect(0, scanLineY - 22, W, 44);
+      ctx.beginPath();
+      ctx.moveTo(0, scanLineY);
+      ctx.lineTo(W, scanLineY);
+      ctx.strokeStyle = 'rgba(16,185,129,0.35)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Head sway warning text
+    if (isAnalyzing && activeShot === 'driver' && kf.headX > 6) {
+      ctx.fillStyle = 'rgba(239,68,68,0.9)';
+      ctx.font = "bold 10px 'Courier New', monospace";
+      ctx.fillText('⚠ HEAD SWAY: +' + Math.round(kf.headX) + 'px', 12, H - 14);
     }
   };
 
@@ -2658,8 +2760,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAnalysisStatusText(currentProgress);
     }
 
-    updateGridScroll();
-
     const kfs = getSwingKeyframes(activeShot);
     const currentKf = interpolate(kfs, currentProgress);
 
@@ -2667,7 +2767,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateTelemetryUI(currentKf, currentProgress);
     }
 
-    drawGolferAscii(currentKf);
+    drawGolfer(currentKf);
 
     requestAnimationFrame(updateLoop);
   };
@@ -2680,7 +2780,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isAnalyzing = true;
 
     analysisOverlay.classList.add('active');
-    analysisText.innerText = '비디오 로드 및 골격 관절 노드 초기화 중...';
+    analysisText.innerText = '영상 로드 중... 골격 관절 노드 초기화';
     btnStartAnalysis.disabled = true;
     if (hudWarning) hudWarning.style.display = 'none';
 
@@ -2962,6 +3062,25 @@ document.addEventListener('DOMContentLoaded', () => {
       updateLedgerUI();
     });
     updateLedgerUI();
+  }
+
+  // --- MOBILE MENU TOGGLE ---
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const navMenu = document.querySelector('header nav');
+
+  if (mobileMenuBtn && navMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      const isOpen = navMenu.classList.toggle('mobile-open');
+      mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    // 메뉴 링크 클릭 시 메뉴 닫기
+    navMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('mobile-open');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
   }
 
 });
