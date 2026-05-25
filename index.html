@@ -3574,6 +3574,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- HERO ASCII PARK GOLF CLUB ANIMATION ---
+  // Head shape modeled after actual park golf club:
+  // beveled top corners, wide low-profile body (4:1 ratio), flat gold sole
   (function() {
     const heroCanvas = document.getElementById('hero-ascii-canvas');
     if (!heroCanvas) return;
@@ -3589,7 +3591,22 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', resize);
 
     const SHAFT_CHARS = 'WAIPHA·AI·GOLF·';
-    const HEAD_ROWS   = ['━━━━━━━━━━━━━━━━━━━━', '████████████████████', '▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄'];
+
+    // Park golf club head — 5-row faceted shape
+    // Each row: { lChar, midChar×midN, rChar } centered independently
+    // Creates wide-base, beveled-top silhouette matching the real club
+    const HEAD_DEFS = [
+      // hosel connector (narrow, connects shaft to head)
+      { l: '╔', mid: '═', n: 2,  r: '╗', fill: '#a3e635', sc: '#84cc16', sb: 12 },
+      // upper bevel — angled corners, widening out
+      { l: '╱', mid: '━', n: 20, r: '╲', fill: '#cbd5e1', sc: '#94a3b8', sb: 10 },
+      // main face — widest row, bright white face
+      { l: '▐', mid: '█', n: 26, r: '▌', fill: '#f8fafc', sc: '#e2e8f0', sb: 28 },
+      // lower face — slightly narrower, darker tone
+      { l: '▐', mid: '▒', n: 24, r: '▌', fill: '#94a3b8', sc: '#64748b', sb: 10 },
+      // sole — narrower, gold tint (matching real club metal base)
+      { l: '╰', mid: '▄', n: 20, r: '╯', fill: '#fbbf24', sc: '#d97706', sb: 14 },
+    ];
 
     let t0 = null;
 
@@ -3612,23 +3629,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const cw  = fs * 0.63;
       const ch  = fs;
 
-      // shaft: 2 chars wide × 22 rows tall
+      // Shaft: 2 chars wide × 22 rows
       const sCols = 2, sRows = 22;
       const sPxW  = sCols * cw;
       const sPxH  = sRows * ch;
-      // head: 18 chars wide × 3 rows
-      const hCols = 18, hRows = 3;
-      const hPxW  = hCols * cw;
 
+      // Drop animation
       const DROP_DUR = 950;
       const dropT    = Math.min(ms / DROP_DUR, 1);
       const dropY    = easeOutBounce(dropT);
 
       const cx      = hW * 0.72;
-      const finalCY = hH * 0.48;
-      const startCY = -(sPxH + hRows * ch + 40);
+      const finalCY = hH * 0.47;
+      const startCY = -(sPxH + HEAD_DEFS.length * ch + 60);
       const cy      = startCY + (finalCY - startCY) * dropY;
 
+      // Pendulum swing (starts after drop)
       const swingMs   = Math.max(0, ms - DROP_DUR * 0.8);
       const swingFade = Math.min(swingMs / 700, 1);
       const swingAmt  = Math.sin(swingMs / 3000 * Math.PI * 2) * 0.26 * swingFade;
@@ -3639,7 +3655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hCtx.rotate(angle);
       hCtx.font = `bold ${fs}px 'Courier New', monospace`;
 
-      // Shaft — lime-to-cyan gradient
+      // Shaft — lime-to-cyan gradient top to bottom
       for (let r = 0; r < sRows; r++) {
         for (let c = 0; c < sCols; c++) {
           const x  = -sPxW / 2 + c * cw;
@@ -3656,21 +3672,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Club head — silver/white
-      const headColors  = ['rgba(203,213,225,0.92)', 'rgba(248,250,252,1)', 'rgba(100,116,139,0.75)'];
-      const headShadows = ['#94a3b8', '#f8fafc', '#334155'];
-      const headBlurs   = [8, 22, 6];
-      for (let r = 0; r < hRows; r++) {
-        const rowStr = HEAD_ROWS[r];
-        for (let c = 0; c < hCols; c++) {
-          const x  = -hPxW / 2 + c * cw;
-          const y  = sPxH / 2 + r * ch;
-          const ch2 = rowStr[c % rowStr.length];
-          hCtx.shadowColor = headShadows[r];
-          hCtx.shadowBlur  = headBlurs[r];
-          hCtx.fillStyle   = headColors[r];
-          hCtx.fillText(ch2, x, y);
-        }
+      // Club head — each row centered independently → creates faceted silhouette
+      for (let ri = 0; ri < HEAD_DEFS.length; ri++) {
+        const def    = HEAD_DEFS[ri];
+        const rowStr = def.l + def.mid.repeat(def.n) + def.r;
+        const rowPxW = rowStr.length * cw;
+        const x      = -rowPxW / 2;
+        const y      = sPxH / 2 + ri * ch;
+        hCtx.shadowColor = def.sc;
+        hCtx.shadowBlur  = def.sb;
+        hCtx.fillStyle   = def.fill;
+        hCtx.fillText(rowStr, x, y);
       }
 
       hCtx.restore();
