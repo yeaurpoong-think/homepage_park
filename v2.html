@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>WAIPHA — World AI Park Golf Health Association</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -401,10 +403,11 @@ footer{background:rgba(3,0,20,.9);border-top:1px solid var(--glass-bd);padding:6
 .modal-success p{font-size:.85rem;color:var(--muted)}
 
 /* ============================
-   SCROLL REVEAL
+   SCROLL REVEAL — js class required so content shows without JS
 ============================ */
-.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}
-.reveal.in{opacity:1;transform:none}
+.reveal{opacity:1;transform:none;transition:opacity .7s,transform .7s}
+html.js .reveal{opacity:0;transform:translateY(30px)}
+html.js .reveal.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -779,6 +782,7 @@ footer{background:rgba(3,0,20,.9);border-top:1px solid var(--glass-bd);padding:6
 </div>
 
 <script>
+document.documentElement.classList.add('js');
 document.addEventListener('DOMContentLoaded', () => {
 
 // ============================
