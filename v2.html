@@ -781,7 +781,7 @@ footer{background:rgba(3,0,20,.9);border-top:1px solid var(--glass-bd);padding:6
 document.addEventListener('DOMContentLoaded', () => {
 
 // ============================
-// PARTICLE BACKGROUND
+// HOLOGRAPHIC BODY SCAN
 // ============================
 const ptcCanvas = document.getElementById('ptc-canvas');
 const ptcCtx = ptcCanvas.getContext('2d');
@@ -790,69 +790,242 @@ let ptcW, ptcH, mouseXp = 0, mouseYp = 0;
 function resizePtc() {
   ptcW = ptcCanvas.width  = window.innerWidth;
   ptcH = ptcCanvas.height = window.innerHeight;
+  mouseXp = ptcW / 2; mouseYp = ptcH / 2;
 }
 resizePtc();
 window.addEventListener('resize', resizePtc);
 window.addEventListener('mousemove', e => { mouseXp = e.clientX; mouseYp = e.clientY; });
 
-const NPTS = 160;
-const focal = 350;
-const pts = Array.from({length: NPTS}, () => ({
-  x: (Math.random() - .5) * 1400,
-  y: (Math.random() - .5) * 1000,
-  z: Math.random() * 900 + 100,
-  vx: (Math.random() - .5) * .15,
-  vy: (Math.random() - .5) * .15,
-  vz: (Math.random() - .5) * .2,
-  hue: Math.random() < .5 ? 200 : Math.random() < .5 ? 270 : 95
-}));
+// Body keypoints — normalized [x,y] where (0.5, 0.5) = center
+const KP = {
+  head:  [.500, .070], neck:  [.500, .158],
+  lSho:  [.370, .215], rSho:  [.630, .215],
+  lElb:  [.300, .365], rElb:  [.700, .365],
+  lWri:  [.248, .512], rWri:  [.752, .512],
+  chest: [.500, .308], heart: [.440, .268],
+  lHip:  [.420, .525], rHip:  [.580, .525],
+  lKne:  [.400, .690], rKne:  [.600, .690],
+  lAnk:  [.390, .875], rAnk:  [.610, .875],
+};
+const LINKS = [
+  ['head','neck'],
+  ['neck','lSho'],['neck','rSho'],
+  ['lSho','lElb'],['lElb','lWri'],
+  ['rSho','rElb'],['rElb','rWri'],
+  ['neck','chest'],
+  ['chest','lHip'],['chest','rHip'],
+  ['lHip','rHip'],
+  ['lHip','lKne'],['lKne','lAnk'],
+  ['rHip','rKne'],['rKne','rAnk'],
+];
+const BIG = new Set(['head','lSho','rSho','chest','lHip','rHip','lKne','rKne']);
+const FLOW = LINKS.map(lnk => ({ lnk, t: Math.random(), spd: .0022 + Math.random() * .004 }));
+const DLABELS = [
+  { kp:'heart', ox:72,  oy:0,  txt:'♥ 72 BPM',  col:'#f72585' },
+  { kp:'head',  ox:78,  oy:-8, txt:'SCAN: 99%',  col:'#00d4ff' },
+  { kp:'rSho',  ox:62,  oy:5,  txt:'BP 120/80',  col:'#9b5de5' },
+  { kp:'lHip',  ox:-90, oy:5,  txt:'TEMP 36.6°', col:'#a3e635' },
+  { kp:'chest', ox:76,  oy:14, txt:'SpO₂ 98%',   col:'#00d4ff' },
+  { kp:'rKne',  ox:62,  oy:5,  txt:'FLEX 145°',  col:'#fbbf24' },
+];
 
-function ptcProject(p) {
-  const s = focal / (focal + p.z);
-  return {
-    sx: ptcW/2 + (p.x + (mouseXp - ptcW/2) * .02) * s,
-    sy: ptcH/2 + (p.y + (mouseYp - ptcH/2) * .02) * s,
-    s
-  };
+let scanY = ptcH * .1, scanDir = 1, ecgPhase = 0, ringAngle = 0;
+let bOffX = 0, bOffY = 0;
+
+// Returns [screenX, screenY, scale] for a named keypoint
+function pt(name) {
+  const [nx, ny] = KP[name];
+  const sc = Math.min(ptcH * .82, ptcW * .50);
+  return [ptcW * .5 + bOffX + (nx - .5) * sc, ptcH * .5 + bOffY + (ny - .5) * sc, sc];
 }
 
-function drawParticles(ts) {
+function drawHoloBody(ts) {
   ptcCtx.clearRect(0, 0, ptcW, ptcH);
-  const proj = pts.map((p, i) => {
-    p.x += p.vx; p.y += p.vy; p.z += p.vz;
-    if (p.x > 800) p.x = -800; if (p.x < -800) p.x = 800;
-    if (p.y > 600) p.y = -600; if (p.y < -600) p.y = 600;
-    if (p.z > 1000) p.z = 50;  if (p.z < 50)   p.z = 1000;
-    return { ...ptcProject(p), hue: p.hue, idx: i };
-  });
 
-  // Lines
-  for (let i = 0; i < NPTS; i++) {
-    for (let j = i+1; j < NPTS; j++) {
-      const dx = proj[i].sx - proj[j].sx, dy = proj[i].sy - proj[j].sy;
-      const d = Math.sqrt(dx*dx + dy*dy);
-      if (d < 100) {
-        ptcCtx.beginPath();
-        ptcCtx.moveTo(proj[i].sx, proj[i].sy);
-        ptcCtx.lineTo(proj[j].sx, proj[j].sy);
-        ptcCtx.strokeStyle = `hsla(${proj[i].hue},100%,65%,${.12 * (1 - d/100)})`;
-        ptcCtx.lineWidth = .5;
-        ptcCtx.stroke();
-      }
-    }
-  }
-  // Dots
-  proj.forEach(p => {
-    const r = p.s * 2.5;
+  // Smooth body drift toward mouse
+  bOffX += ((mouseXp - ptcW / 2) * .045 - bOffX) * .038;
+  bOffY += ((mouseYp - ptcH / 2) * .035 - bOffY) * .038;
+
+  scanY += scanDir * .65;
+  if (scanY > ptcH * .96) scanDir = -1;
+  if (scanY < ptcH * .04) scanDir = 1;
+  ecgPhase += .038;
+  ringAngle += .006;
+
+  const [headCx, headCy, sc] = pt('head');
+  const headR = sc * .056;
+
+  // ── Head glow ──
+  const hgr = ptcCtx.createRadialGradient(headCx, headCy, 0, headCx, headCy, headR * 2.8);
+  hgr.addColorStop(0, 'rgba(0,212,255,.14)');
+  hgr.addColorStop(1, 'rgba(0,212,255,0)');
+  ptcCtx.beginPath();
+  ptcCtx.arc(headCx, headCy, headR * 2.8, 0, Math.PI * 2);
+  ptcCtx.fillStyle = hgr;
+  ptcCtx.fill();
+  // Head circle outline
+  ptcCtx.beginPath();
+  ptcCtx.arc(headCx, headCy, headR, 0, Math.PI * 2);
+  ptcCtx.strokeStyle = 'rgba(0,212,255,.45)';
+  ptcCtx.lineWidth = 1.2;
+  ptcCtx.shadowColor = '#00d4ff'; ptcCtx.shadowBlur = 12;
+  ptcCtx.stroke();
+  ptcCtx.shadowBlur = 0;
+
+  // ── Torso fill glow ──
+  const [nkX, nkY] = pt('neck');
+  const [lsX, lsY] = pt('lSho');
+  const [rsX, rsY] = pt('rSho');
+  const [lhX, lhY] = pt('lHip');
+  const [rhX, rhY] = pt('rHip');
+  const tg = ptcCtx.createLinearGradient(nkX, nkY, nkX, (lhY + rhY) / 2);
+  tg.addColorStop(0, 'rgba(0,212,255,.07)');
+  tg.addColorStop(.5, 'rgba(155,93,229,.05)');
+  tg.addColorStop(1, 'rgba(0,212,255,.02)');
+  ptcCtx.beginPath();
+  ptcCtx.moveTo(nkX, nkY);
+  ptcCtx.lineTo(rsX, rsY); ptcCtx.lineTo(rhX, rhY);
+  ptcCtx.lineTo(lhX, lhY); ptcCtx.lineTo(lsX, lsY);
+  ptcCtx.closePath();
+  ptcCtx.fillStyle = tg;
+  ptcCtx.fill();
+
+  // ── Skeleton links ──
+  ptcCtx.shadowColor = '#00d4ff'; ptcCtx.shadowBlur = 7;
+  LINKS.forEach(([a, b]) => {
+    const [ax, ay] = pt(a), [bx, by] = pt(b);
+    const g = ptcCtx.createLinearGradient(ax, ay, bx, by);
+    g.addColorStop(0, 'rgba(0,212,255,.78)');
+    g.addColorStop(1, 'rgba(155,93,229,.78)');
     ptcCtx.beginPath();
-    ptcCtx.arc(p.sx, p.sy, r, 0, Math.PI*2);
-    ptcCtx.fillStyle = `hsla(${p.hue},100%,70%,${.6 * p.s})`;
-    ptcCtx.fill();
+    ptcCtx.moveTo(ax, ay); ptcCtx.lineTo(bx, by);
+    ptcCtx.strokeStyle = g; ptcCtx.lineWidth = 1.3;
+    ptcCtx.stroke();
+  });
+  ptcCtx.shadowBlur = 0;
+
+  // ── Joint nodes ──
+  Object.keys(KP).forEach(name => {
+    const [x, y] = pt(name);
+    const big = BIG.has(name);
+    const r = big ? sc * .018 : sc * .011;
+
+    if (big) {
+      // Outer pulse ring
+      const pulse = .5 + .5 * Math.sin(ts / 880 + y * .013);
+      ptcCtx.beginPath();
+      ptcCtx.arc(x, y, r * (2.3 + pulse * .9), 0, Math.PI * 2);
+      ptcCtx.strokeStyle = `rgba(0,212,255,${.17 * pulse})`;
+      ptcCtx.lineWidth = .8; ptcCtx.stroke();
+      // Rotating dashed gold ring
+      ptcCtx.save(); ptcCtx.translate(x, y); ptcCtx.rotate(ringAngle + y * .009);
+      ptcCtx.beginPath(); ptcCtx.setLineDash([4, 6]);
+      ptcCtx.arc(0, 0, r * 1.75, 0, Math.PI * 2);
+      ptcCtx.strokeStyle = 'rgba(251,191,36,.55)'; ptcCtx.lineWidth = .9;
+      ptcCtx.stroke(); ptcCtx.setLineDash([]); ptcCtx.restore();
+    }
+
+    // Core glow dot
+    const dg = ptcCtx.createRadialGradient(x, y, 0, x, y, r);
+    dg.addColorStop(0, 'rgba(255,255,255,.95)');
+    dg.addColorStop(.4, 'rgba(0,212,255,.88)');
+    dg.addColorStop(1, 'rgba(0,212,255,0)');
+    ptcCtx.beginPath();
+    ptcCtx.arc(x, y, r, 0, Math.PI * 2);
+    ptcCtx.fillStyle = dg;
+    ptcCtx.shadowColor = '#00d4ff'; ptcCtx.shadowBlur = 14;
+    ptcCtx.fill(); ptcCtx.shadowBlur = 0;
   });
 
-  requestAnimationFrame(drawParticles);
+  // ── Flow particles along skeleton ──
+  FLOW.forEach(fp => {
+    fp.t = (fp.t + fp.spd) % 1;
+    const [ax, ay] = pt(fp.lnk[0]), [bx, by] = pt(fp.lnk[1]);
+    const px = ax + (bx - ax) * fp.t, py = ay + (by - ay) * fp.t;
+    ptcCtx.beginPath();
+    ptcCtx.arc(px, py, 2.4, 0, Math.PI * 2);
+    ptcCtx.fillStyle = 'rgba(0,220,255,.95)';
+    ptcCtx.shadowColor = '#00d4ff'; ptcCtx.shadowBlur = 10;
+    ptcCtx.fill(); ptcCtx.shadowBlur = 0;
+  });
+
+  // ── ECG wave at heart ──
+  const [hrtX, hrtY] = pt('heart');
+  const eW = sc * .23, eA = sc * .055;
+  ptcCtx.beginPath();
+  for (let i = 0; i <= 100; i++) {
+    const tt = i / 100;
+    const cx = hrtX - eW / 2 + tt * eW;
+    let cy = hrtY;
+    if      (tt > .30 && tt < .40) cy = hrtY - Math.sin((tt - .30) / .10 * Math.PI) * eA * 1.7;
+    else if (tt > .40 && tt < .45) cy = hrtY + Math.sin((tt - .40) / .05 * Math.PI) * eA * .7;
+    else if (tt > .45 && tt < .55) cy = hrtY - Math.sin((tt - .45) / .10 * Math.PI) * eA * 2.6;
+    else if (tt > .55 && tt < .65) cy = hrtY + Math.sin((tt - .55) / .10 * Math.PI) * eA * .45;
+    else cy = hrtY + Math.sin(ecgPhase + tt * Math.PI * 3) * eA * .10;
+    i === 0 ? ptcCtx.moveTo(cx, cy) : ptcCtx.lineTo(cx, cy);
+  }
+  ptcCtx.strokeStyle = 'rgba(247,37,133,.88)';
+  ptcCtx.lineWidth = 1.6;
+  ptcCtx.shadowColor = '#f72585'; ptcCtx.shadowBlur = 10;
+  ptcCtx.stroke(); ptcCtx.shadowBlur = 0;
+
+  // ── Horizontal scan line ──
+  const sg = ptcCtx.createLinearGradient(0, scanY - 40, 0, scanY + 40);
+  sg.addColorStop(0, 'rgba(0,212,255,0)');
+  sg.addColorStop(.5, 'rgba(0,212,255,.09)');
+  sg.addColorStop(1, 'rgba(0,212,255,0)');
+  ptcCtx.fillStyle = sg;
+  ptcCtx.fillRect(0, scanY - 40, ptcW, 80);
+  ptcCtx.beginPath();
+  ptcCtx.moveTo(0, scanY); ptcCtx.lineTo(ptcW, scanY);
+  ptcCtx.strokeStyle = 'rgba(0,212,255,.28)'; ptcCtx.lineWidth = 1;
+  ptcCtx.stroke();
+
+  // ── Data labels with connector lines ──
+  const fs = Math.max(10, sc * .021);
+  ptcCtx.font = `bold ${fs}px 'Space Mono',monospace`;
+  DLABELS.forEach(dl => {
+    const [kx, ky] = pt(dl.kp);
+    const lx = kx + dl.ox;
+    const ly = ky + dl.oy + Math.sin(ts / 2100 + dl.ox) * 3;
+    // Connector line
+    ptcCtx.beginPath();
+    ptcCtx.moveTo(kx, ky); ptcCtx.lineTo(lx, ly);
+    ptcCtx.strokeStyle = dl.col + '55'; ptcCtx.lineWidth = .7;
+    ptcCtx.stroke();
+    // Label
+    const tw = ptcCtx.measureText(dl.txt).width;
+    const tx = dl.ox < 0 ? lx - tw : lx;
+    ptcCtx.fillStyle = 'rgba(3,0,20,.78)';
+    ptcCtx.fillRect(tx - 3, ly - fs, tw + 6, fs + 5);
+    ptcCtx.fillStyle = dl.col;
+    ptcCtx.shadowColor = dl.col; ptcCtx.shadowBlur = 7;
+    ptcCtx.fillText(dl.txt, tx, ly);
+    ptcCtx.shadowBlur = 0;
+  });
+
+  // ── Head halo with tick marks ──
+  ptcCtx.save();
+  ptcCtx.translate(headCx, headCy);
+  ptcCtx.rotate(ringAngle * .35);
+  ptcCtx.beginPath();
+  ptcCtx.arc(0, 0, headR * 1.5, 0, Math.PI * 2);
+  ptcCtx.strokeStyle = 'rgba(0,212,255,.25)'; ptcCtx.lineWidth = 1.5;
+  ptcCtx.shadowColor = '#00d4ff'; ptcCtx.shadowBlur = 13;
+  ptcCtx.stroke(); ptcCtx.shadowBlur = 0;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ptcCtx.beginPath();
+    ptcCtx.moveTo(Math.cos(a) * headR * 1.22, Math.sin(a) * headR * 1.22);
+    ptcCtx.lineTo(Math.cos(a) * headR * 1.58, Math.sin(a) * headR * 1.58);
+    ptcCtx.strokeStyle = 'rgba(0,212,255,.55)'; ptcCtx.lineWidth = 1;
+    ptcCtx.stroke();
+  }
+  ptcCtx.restore();
+
+  requestAnimationFrame(drawHoloBody);
 }
-requestAnimationFrame(drawParticles);
+requestAnimationFrame(drawHoloBody);
 
 // ============================
 // SCROLL REVEAL
