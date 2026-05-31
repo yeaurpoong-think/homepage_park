@@ -1114,7 +1114,7 @@ const drawJoint = (x,y,r,col,lbl) => {
   if(lbl){ctx.font="bold 9px 'Courier New',monospace";ctx.fillStyle=col;ctx.globalAlpha=.85;ctx.fillText(lbl,x+r+5,y+3);ctx.globalAlpha=1;}
 };
 
-let scanLineY=0,scanDir=1;
+let scanLineY=0,swingScanDir=1;
 const drawGolfer = (kf) => {
   const W=canvas.width,H=canvas.height;
   ctx.clearRect(0,0,W,H);
@@ -1180,7 +1180,7 @@ const drawGolfer = (kf) => {
   }
   ctx.beginPath();ctx.arc(chX,chY,5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.95)';ctx.fill();
   if(isAnalyzing){
-    scanLineY+=1.8*scanDir;if(scanLineY>H)scanDir=-1;if(scanLineY<0)scanDir=1;
+    scanLineY+=1.8*swingScanDir;if(scanLineY>H)swingScanDir=-1;if(scanLineY<0)swingScanDir=1;
     const sG=ctx.createLinearGradient(0,scanLineY-22,0,scanLineY+22);
     sG.addColorStop(0,'transparent');sG.addColorStop(.5,'rgba(0,212,255,0.1)');sG.addColorStop(1,'transparent');
     ctx.fillStyle=sG;ctx.fillRect(0,scanLineY-22,W,44);
