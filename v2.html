@@ -88,8 +88,7 @@ nav a:hover{color:var(--blue)}
   mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
   pointer-events:none
 }
-#hero-ascii-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.hero>*:not(#hero-ascii-canvas):not(.hero-grid-overlay){position:relative;z-index:2}
+.hero>*:not(.hero-grid-overlay){position:relative;z-index:2}
 .tag-pill{
   display:inline-block;padding:6px 16px;border-radius:30px;font-size:.72rem;
   letter-spacing:.12em;font-family:'Space Mono',monospace;
@@ -431,7 +430,7 @@ footer{background:rgba(3,0,20,.9);border-top:1px solid var(--glass-bd);padding:6
 <!-- ====== HERO ====== -->
 <section class="hero" id="hero-section">
   <div class="hero-grid-overlay"></div>
-  <canvas id="hero-ascii-canvas" aria-hidden="true"></canvas>
+
   <div class="tag-pill">WORLD AI PARK GOLF HEALTH ASSOCIATION · WAIPHA SYSTEM v2.0</div>
   <h1>AI-Powered Swing Analysis<br><span class="grad">&amp; Smart Golfing Wellness</span></h1>
   <p>사단법인 세계AI파크골프건강협회(WAIPHA)는 아날로그 파크골프에 스마트 AI 자세 분석, 실시간 스마트워치 헬스케어, 사회적 초포용(Wellness) 가치를 이식하여 글로벌 K-스포츠의 표준을 수립합니다.</p>
@@ -854,67 +853,6 @@ function drawParticles(ts) {
   requestAnimationFrame(drawParticles);
 }
 requestAnimationFrame(drawParticles);
-
-// ============================
-// HERO ASCII CLUB
-// ============================
-(function() {
-  const hc = document.getElementById('hero-ascii-canvas');
-  if (!hc) return;
-  const hx = hc.getContext('2d');
-  let hW, hH;
-  function rhc() {
-    const r = hc.getBoundingClientRect();
-    hW = hc.width  = r.width  || window.innerWidth;
-    hH = hc.height = r.height || window.innerHeight;
-  }
-  rhc();
-  window.addEventListener('resize', rhc);
-
-  const SHAFT = 'WAIPHA·AI·GOLF·';
-  const HEAD = [
-    {l:'╔',mid:'═',n:2, r:'╗',fill:'#00d4ff',sc:'#0ea5e9',sb:14},
-    {l:'╱',mid:'━',n:20,r:'╲',fill:'#cbd5e1',sc:'#94a3b8',sb:10},
-    {l:'▐',mid:'█',n:26,r:'▌',fill:'#f8fafc',sc:'#e2e8f0',sb:28},
-    {l:'▐',mid:'▒',n:24,r:'▌',fill:'#94a3b8',sc:'#64748b',sb:10},
-    {l:'╰',mid:'▄',n:20,r:'╯',fill:'#9b5de5',sc:'#7c3aed',sb:14},
-  ];
-  let t0h = null;
-  function eob(t){const n=7.5625,d=2.75;if(t<1/d)return n*t*t;if(t<2/d)return n*(t-=1.5/d)*t+.75;if(t<2.5/d)return n*(t-=2.25/d)*t+.9375;return n*(t-=2.625/d)*t+.984375;}
-  function hf(ts){
-    if(!t0h)t0h=ts;
-    const ms=ts-t0h;
-    hx.clearRect(0,0,hW,hH);
-    const sc=Math.min(hW,hH)/700,fs=Math.max(10,Math.round(14*sc)),cw=fs*.63,ch=fs;
-    const sRows=22,sPxW=2*cw,sPxH=sRows*ch;
-    const DROP=950,dt=Math.min(ms/DROP,1),dy=eob(dt);
-    const cx=hW*.72,fcy=hH*.48,scy=-(sPxH+HEAD.length*ch+60);
-    const cy=scy+(fcy-scy)*dy;
-    const swMs=Math.max(0,ms-DROP*.8),swFade=Math.min(swMs/700,1);
-    const ang=Math.PI/9+Math.sin(swMs/3000*Math.PI*2)*.26*swFade;
-    hx.save();hx.translate(cx,cy);hx.rotate(ang);
-    hx.font=`bold ${fs}px 'Courier New',monospace`;
-    for(let r=0;r<sRows;r++){
-      for(let c=0;c<2;c++){
-        const x=-sPxW/2+c*cw,y=-sPxH/2+r*ch;
-        const ci=(r*2+c)%SHAFT.length,t2=r/sRows;
-        const rr=Math.round(0+(0-0)*t2),gg=Math.round(212+(166-212)*t2),bb=Math.round(255+(255-255)*t2);
-        hx.shadowColor=`rgb(0,${Math.round(212+(166-212)*t2)},255)`;
-        hx.shadowBlur=10;hx.fillStyle=`rgb(0,${Math.round(212+(166-212)*t2)},255)`;
-        hx.fillText(SHAFT[ci],x,y);
-      }
-    }
-    HEAD.forEach((def,ri)=>{
-      const s=def.l+def.mid.repeat(def.n)+def.r;
-      const pw=s.length*cw,x=-pw/2,y=sPxH/2+ri*ch;
-      hx.shadowColor=def.sc;hx.shadowBlur=def.sb;hx.fillStyle=def.fill;
-      hx.fillText(s,x,y);
-    });
-    hx.restore();
-    requestAnimationFrame(hf);
-  }
-  requestAnimationFrame(hf);
-})();
 
 // ============================
 // SCROLL REVEAL
